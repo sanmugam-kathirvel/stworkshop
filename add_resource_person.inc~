@@ -3,6 +3,7 @@
 function workshops_add_resource_person_form($form_state) {
 	$path = drupal_get_path('module', 'workshops');
 	drupal_add_js($path . '/workshops.js', 'module');
+	
 	$form['#attributes'] = array('enctype' => "multipart/form-data");
 
 	$form['rp_name'] = array(

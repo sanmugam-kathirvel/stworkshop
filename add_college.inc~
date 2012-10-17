@@ -1,9 +1,11 @@
 <?php
 
 function workshops_add_college_form($form_state) {
-	
+	$path = drupal_get_path('module', 'workshops');
+  drupal_add_js($path . '/workshops.js', 'module');
 	global $user;
 	$states_array = array(
+		'' => 'select state',
 		'ANP' => 'Andhra Pradesh',
 		'ARP' => 'Arunachal Pradesh',
 		'ASM' => 'Assam',
@@ -40,7 +42,7 @@ function workshops_add_college_form($form_state) {
 		'ANR' => 'Andaman/Nicobar',
 		'CHG' => 'Chandigarh',
 	);
-
+# get current resource person name
 	$query = "select rp_name, states from resource_person where user_name='" . $user->name."'";
 
 	db_set_active('workshop_info');
@@ -62,10 +64,10 @@ function workshops_add_college_form($form_state) {
 
 	$form['state'] = array(
 		'#type' => 'select',
-		'#multiple' => FALSE,
 		'#title' => t('State'),
 		'#required' => TRUE,
 		'#options' => $states_array,
+		'#attributes' => array('class' => 'college_state')
 	);
 
 	$form['academic_code'] = array(
@@ -73,8 +75,7 @@ function workshops_add_college_form($form_state) {
 		'#title' => t('Academic Code'),
 		'#size' => 30,
 		'#required' => TRUE,
-		'#value' => 'TAM-00002',
-		'#attributes' => array('readonly' => 'readonly')
+		'#attributes' => array('readonly' => 'readonly', 'class' => 'college_academic_code')
 	);
 
 	$form['college_name'] = array(
@@ -143,17 +144,20 @@ function workshops_add_college_form_submit($form, &$form_state){
 
 	$query = "insert into academic_center values('', '".$form_state['values']['state']."', '".$form_state['values']['academic_code']."', '".$form_state['values']['college_name']."', '".$form_state['values']['department'];
 	$query .= "', '".$form_state['values']['street']."', '".$form_state['values']['city']."', '".$form_state['values']['pincode']."', '".$form_state['values']['rp_name']."')";
-
 	db_set_active('workshop_info');
-
 	if(db_query($query)){
 		drupal_set_message('College Details Added Successfully');
 	}else {
 		drupal_set_message('Error Adding College Details');
 	}
-
 	db_set_active('default');
 	// echo $query;
 	// exit;
+}
+function workshops_add_college_form_validate($form, &$form_state){
+	if (!preg_match('/^[0-9\ \+]{0,6}$/', $form_state['values']['pincode'])){
+		form_set_error('pincode', t('Invalid Pincode number'));
+	}
+  return;
 }
 

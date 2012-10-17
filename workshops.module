@@ -1,0 +1,30 @@
+<?php
+
+function workshops_perm() {
+	return array('Workshop Add New Resource Person', 'Workshop Add New College');
+}
+
+function workshops_menu(){
+	$items = array();
+	
+	$items['workshops/add_resource_person'] = array(
+		'title' => 'Add New Resource Person',
+		'description' => 'Adding new resource preson\'s detail', 
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('workshops_add_resource_person_form'),
+		'access arguments' => array('Workshop Add New Resource Person'),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'add_resource_person.inc',
+	);
+	$items['workshops/add_college'] = array(
+		'title' => 'Add New College Details',
+		'description' => 'Adding new college details detail',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('workshops_add_college_form'),
+		'access arguments' => array('Workshop Add New College'),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'add_college.inc',
+	);
+  return $items;
+}
+

@@ -33,8 +33,26 @@ $(document).ready(function(){
 		});
 	});
 // resurce preson
-	$('.resource_person_state').click(function(){
-		alert('hi');
+	$('#resource_person_state').click(function(){
+		var selected_states = "";
+		var selObj = document.getElementById('resource_person_state');
+		var i;
+		for (i = 0; i < selObj.options.length; i++) {
+			if (selObj.options[i].selected) {
+				if(selected_states != ""){
+					selected_states += "-";
+				}
+				selected_states += selObj.options[i].text;
+			}
+		}
+		console.log(selected_states);
 		console.log($(this).val());
+		//document.getElementById('lbl_selected_states').innerHTML = selected_states2;
+		//if(selected_states == ""){
+		//	document.getElementById('lbl_caption').innerHTML = "";
+		//}else{
+		//	document.getElementById('lbl_caption').innerHTML = "Selected States:";
+		//}
 	});
+
 });

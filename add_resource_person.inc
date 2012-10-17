@@ -48,7 +48,7 @@ function workshops_add_resource_person_form($form_state) {
 		'#multiple' => TRUE,
 		'#title' => t('States'),
 		'#required' => TRUE,
-		'#attributes' => array('class' => 'resource_person_state'),
+		'#attributes' => array('id' => 'resource_person_state'),
 		'#options' => array(
 			'ANP' => 'Andhra Pradesh',
 			'ANR' => 'Andaman/Nicobar',
@@ -112,7 +112,7 @@ function workshops_add_resource_person_form_submit($form, &$form_state){
 	$selected_states = '';
 	foreach($form_state['values']['states'] as $sel_state){
 		if($selected_states != '')
-			$selected_states .= "-";
+			$selected_states .= ",";
 		$selected_states .= $sel_state;
 	}
 	$query = "insert into  resource_person values('', '".$form_state['values']['username']."', '".$form_state['values']['rp_name']."', '".$form_state['values']['email']."', '".$form_state['values']['phone']."', '".$selected_states."')";

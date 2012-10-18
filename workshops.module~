@@ -1,42 +1,5 @@
 <?php
-$states_array = array(
-		'' => 'select state',
-		'ANP' => 'Andhra Pradesh',
-		'ARP' => 'Arunachal Pradesh',
-		'ASM' => 'Assam',
-		'BHR' => 'Bihar',
-		'CTG' => 'Chattisgarh',
-		'DDU' => 'Daman/Diu',
-		'DEL' => 'Delhi',
-		'DNG' => 'Dadar/Nag',
-		'GOA' => 'Goa',
-		'GUJ' => 'Gujarat',
-		'HAR' => 'Hariyana',
-		'HMP' => 'HimachalPradesh',
-		'JNK' => 'JammuKashmir',
-		'JHD' => 'Jharkhand',
-		'KAR' => 'Karnataka',
-		'KER' => 'Kerela',
-		'LKD' => 'Lakshadweep',
-		'MDP' => 'MadhyaPradesh',
-		'MAH' => 'Maharastra',
-		'MAN' => 'Manipur',
-		'MEG' => 'Meghalaya',
-		'MIZ' => 'Mizoram',
-		'NAG' => 'Nagaland',
-		'ODI' => 'Orissa',
-		'PCY' => 'Pondicherry',
-		'PJB' => 'Punjab',
-		'RAJ' => 'Rajasthan',
-		'SIK' => 'Sikkim',
-		'TAM' => 'TamilNadu',
-		'TRP' => 'Tripura',
-		'UTK' => 'UttarKhand',
-		'UTP' => 'UttarPradesh',
-		'WBN' => 'WestBengal',
-		'ANR' => 'Andaman/Nicobar',
-		'CHG' => 'Chandigarh',
-	);
+
 function workshops_perm() {
 	return array('Workshop Add New Resource Person', 'Workshop Add New College', 'Workshop Get College');
 }
@@ -58,6 +21,22 @@ function workshops_menu(){
 		'description' => 'Adding new college details detail',
 		'page callback' => 'drupal_get_form',
 		'page arguments' => array('workshops_add_college_form'),
+		'access arguments' => array('Workshop Add New College'),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'add_college.inc',
+	);
+	$items['workshops/edit_college'] = array(
+		'title' => 'Edit College Details',
+		'description' => 'Adding new college details detail',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('workshops_edit_college_form'),
+		'access arguments' => array('Workshop Add New College'),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'add_college.inc',
+	);
+	$items['workshops/list_college'] = array(
+		'title' => 'Listing College Details',
+		'page callback' => 'workshops_list_college_details',
 		'access arguments' => array('Workshop Add New College'),
 		'type' => MENU_NORMAL_ITEM,
 		'file' => 'add_college.inc',

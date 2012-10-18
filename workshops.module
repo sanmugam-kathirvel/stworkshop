@@ -25,6 +25,22 @@ function workshops_menu(){
 		'type' => MENU_NORMAL_ITEM,
 		'file' => 'add_college.inc',
 	);
+	$items['workshops/edit_college'] = array(
+		'title' => 'Edit College Details',
+		'description' => 'Adding new college details detail',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('workshops_edit_college_form'),
+		'access arguments' => array('Workshop Add New College'),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'add_college.inc',
+	);
+	$items['workshops/list_college'] = array(
+		'title' => 'Listing College Details',
+		'page callback' => 'workshops_list_college_details',
+		'access arguments' => array('Workshop Add New College'),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'add_college.inc',
+	);
 	$items['workshops/get_college_details'] = array(
 		'title' => 'Add New College Details',
 		'description' => 'Adding new college details detail',

@@ -47,6 +47,7 @@ $(document).ready(function(){
 		}
 		console.log(selected_states);
 		console.log($(this).val());
+		//$(this)append().after().html('<div class="form-item">Selected State</div>');
 		//document.getElementById('lbl_selected_states').innerHTML = selected_states2;
 		//if(selected_states == ""){
 		//	document.getElementById('lbl_caption').innerHTML = "";

@@ -55,5 +55,27 @@ $(document).ready(function(){
 		//	document.getElementById('lbl_caption').innerHTML = "Selected States:";
 		//}
 	});
+	$('.organiser_academic_code').change(function(){
+		var webroot = 'http://localhost/spokentutorial.org/workshops/'
+		this_data = $(this);
+		$.ajax({
+			type : 'POST',
+			url : webroot + "get_academic_details",
+			data : {
+				'academic_code' : $('.organiser_academic_code').val() 
+			},
+			success : function(data){
+				output = JSON.parse(data);
+				if (output){
+					html_data = "<h3>Entered Academic Details</h3><table><tr><td>Institution Name</td><td>" + output.institution_name + "</td></tr>" + "<tr><td>State Code</td><td>" + output.state_code + "</td></tr>" + "<tr><td>City</td><td>" + output.city + "</td></tr></table>";
+					$('#academic-details').html(html_data);
+				}else{
+					html_data = "<p>Enteres Academic code not exists, Please check</p>";
+					$('#academic-details').html(html_data);
+				}	
+				console.log(output);
+			}
+		});
+	});
 
 });

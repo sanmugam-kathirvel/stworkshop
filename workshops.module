@@ -1,7 +1,7 @@
 <?php
 
 function workshops_perm() {
-	return array('Workshop Add New Resource Person', 'Workshop Add New College', 'Workshop Get College');
+	return array('Workshop Add New Resource Person', 'Workshop Add New College', 'Workshop Get College', 'Workshop Organiser College');
 }
 
 function workshops_menu(){
@@ -48,6 +48,21 @@ function workshops_menu(){
 		'access arguments' => array('Workshop Get College'),
 		'type' => MENU_NORMAL_ITEM,
 	);
+	$items['workshops/add_organiser'] = array(
+		'title' => 'Add New Organiser Details',
+		'description' => 'Adding new Organiser details detail',
+		'page callback' => 'workshops_add_organiser',
+		'access arguments' => array('Workshop Organiser College'),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'organiser.inc',
+	);
+	$items['workshops/get_academic_details'] = array(
+		'title' => 'Add New College Details',
+		'description' => 'Adding new college details detail',
+		'page callback' => 'get_academic_details',
+		'access arguments' => array('Workshop Organiser College'),
+		'type' => MENU_NORMAL_ITEM,
+	);
 
   return $items;
 }
@@ -63,3 +78,18 @@ function get_college_details(){
 		exit;
 	}
 }
+
+function get_academic_details(){
+	if(isset($_POST['academic_code'])){
+		$query = "select * from academic_center where academic_code='".$_POST['academic_code']."'";
+		db_set_active('workshop_info');
+		$result = db_query($query);
+		db_set_active('default');
+		$row = db_fetch_object($result);
+		echo json_encode($row);
+		exit;
+	}
+}
+
+
+?>

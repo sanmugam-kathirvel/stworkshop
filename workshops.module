@@ -1,7 +1,7 @@
 <?php
 
 function workshops_perm() {
-	return array('Workshop Add New Resource Person', 'Workshop Add New College', 'Workshop Get College', 'Workshop Organiser College');
+	return array('Workshop Add New Resource Person', 'Workshop Add New College', 'Workshop Get College', 'Workshop Organiser College', 'Workshop Request', 'Test Request');
 }
 
 function workshops_menu(){
@@ -62,6 +62,22 @@ function workshops_menu(){
 		'page callback' => 'get_academic_details',
 		'access arguments' => array('Workshop Organiser College'),
 		'type' => MENU_NORMAL_ITEM,
+	);
+	$items['workshops/workshop_request'] = array(
+		'title' => 'Workshop Request',
+		'description' => 'Request for workshops',
+		'page callback' => 'workshops_workshop_request',
+		'access arguments' => array('Workshop Request'),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'workshop_request.inc',
+	);
+	$items['workshops/test_request'] = array(
+		'title' => 'Test Request',
+		'description' => 'Request for Test',
+		'page callback' => 'workshops_test_request',
+		'access arguments' => array('Test Request'),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'test_request.inc',
 	);
 
   return $items;

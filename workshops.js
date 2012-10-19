@@ -69,6 +69,7 @@ $(document).ready(function(){
 				if (output){
 					html_data = "<h3>Entered Academic Details</h3><table><tr><td>Institution Name</td><td>" + output.institution_name + "</td></tr>" + "<tr><td>State Code</td><td>" + output.state_code + "</td></tr>" + "<tr><td>City</td><td>" + output.city + "</td></tr></table>";
 					$('#academic-details').html(html_data);
+					$('.department').val(output.department);
 				}else{
 					html_data = "<p>Enteres Academic code not exists, Please check</p>";
 					$('#academic-details').html(html_data);

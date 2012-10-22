@@ -263,16 +263,16 @@
 		print_r($form_state['values']);
 		$cfm_wkshop_date = $form_state['values']['cfm_wkshop_date']['year'].'-'.$form_state['values']['cfm_wkshop_date']['month'].'-'.$form_state['values']['cfm_wkshop_date']['day'];
 		$cfm_wkshop_time = $form_state['values']['cfm_wkshop_time'].':'.$form_state['values']['cfm_wkshop_minute'];
-
-		$transition = array(
-				'id' => $form_state['values']['id'],
-				'cfm_wkshop_date' => $cfm_wkshop_date,
-				'cfm_wkshop_time' => $cfm_wkshop_time
-			);
-		//$query = "insert into  workshop_requests values('','', '".$form_state['values']['academic_code']."', '".$form_state['values']['department']."', '".$pref_wkshop_date."','', '".$pref_wkshop_time."', '', '".$form_state['values']['foss_category']."', '".$form_state['values']['pref_language']."',''".")";
+		$workshop_code = 'WC-'.$form_state['values']['id'];
+		// $transition = array(
+		// 		'id' => $form_state['values']['id'],
+		// 		'cfm_wkshop_date' => $cfm_wkshop_date,
+		// 		'cfm_wkshop_time' => $cfm_wkshop_time
+		// 	);
+		$query = "insert into  workshop_requests values('','', '".$form_state['values']['academic_code']."', '".$form_state['values']['department']."', '".$pref_wkshop_date."','', '".$pref_wkshop_time."', '', '".$form_state['values']['foss_category']."', '".$form_state['values']['pref_language']."',''".")";
 		db_set_active('workshop_info');
-		//if(db_query($query)){
-		if(drupal_write_record('workshop_requests', $transition, 'id')){
+		if(db_query($query)){
+		//if(drupal_write_record('workshop_requests', $transition, 'id')){
 			drupal_set_message('Workshop Request Details Added Successfully');
 		}else {
 			drupal_set_message('Error Adding Workshop Request Details');

@@ -3,7 +3,7 @@ $(document).ready(function(){
 		var webroot = 'http://localhost/spokentutorial.org/workshops/'
 		$.ajax({
 			type : 'POST',
-			url : webroot + "get_college_details",
+			url : webroot + "college/get_college_details",
 			data : {
 				'state_code' : $('.college_state').val() 
 			},
@@ -67,12 +67,35 @@ $(document).ready(function(){
 			success : function(data){
 				output = JSON.parse(data);
 				if (output){
-					html_data = "<h3>Entered Academic Details</h3><table><tr><td>Institution Name</td><td>" + output.institution_name + "</td></tr>" + "<tr><td>State Code</td><td>" + output.state_code + "</td></tr>" + "<tr><td>City</td><td>" + output.city + "</td></tr></table>";
+					html_data = "<table><tr><td>Institution Name</td><td>" + output.institution_name + "</td></tr>" + "<tr><td>State Code</td><td>" + output.state_code + "</td></tr>" + "<tr><td>City</td><td>" + output.city + "</td></tr></table>";
 					$('#academic-details').html(html_data);
 					$('.department').val(output.department);
 				}else{
-					html_data = "<p>Enteres Academic code not exists, Please check</p>";
+					html_data = "<p>Academic code not exists, Please check</p>";
 					$('#academic-details').html(html_data);
+				}	
+				console.log(output);
+			}
+		});
+	});
+
+	$('.detail_workshop_code').change(function(){
+		var webroot = 'http://localhost/spokentutorial.org/workshops/'
+		this_data = $(this);
+		$.ajax({
+			type : 'POST',
+			url : webroot + "get_workshop_details",
+			data : {
+				'workshop_code' : $('.detail_workshop_code').val() 
+			},
+			success : function(data){
+				output = JSON.parse(data);
+				if (output){
+					html_data = "<h3>Entered Academic Details</h3><table><tr><td>FOSS Category</td><td>" + output.foss_category + "</td></tr>" + "<tr><td>Date</td><td>" + output.cfm_wkshop_date + "</td></tr>" + "<tr><td>Time</td><td>" + output.cfm_wkshop_time + "</td></tr></table>";
+					$('#workshop-details').html(html_data);
+				}else{
+					html_data = "<p>Entered Workshop code not exists, Please check</p>";
+					$('#workshop-details').html(html_data);
 				}	
 				console.log(output);
 			}

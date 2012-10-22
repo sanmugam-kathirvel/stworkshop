@@ -1,7 +1,7 @@
 <?php
 
 function workshops_perm() {
-	return array('Workshop Add New Resource Person', 'Workshop Add New College', 'Workshop Get College', 'Workshop Organiser College', 'Workshop Request', 'Workshop Request List', 'Test Request');
+	return array('Workshop Add New Resource Person', 'Workshop Add New College', 'Workshop Get College', 'Workshop Organiser College', 'Workshop Request', 'Workshop Request List', 'Test Request', 'Test Request List', 'Workshop Detail', 'Participant Register');
 }
 
 function workshops_menu(){
@@ -16,16 +16,24 @@ function workshops_menu(){
 		'type' => MENU_NORMAL_ITEM,
 		'file' => 'add_resource_person.inc',
 	);
-	$items['workshops/add_college'] = array(
+	$items['workshops/college'] = array(
+		'title' => 'College Details',
+		'description' => 'college details',
+		'page callback' => 'drupal_get_form',
+		'page callback' => 'workshops_list_college_details',
+		'access arguments' => array('Workshop Add New College'),
+		'file' => 'add_college.inc'
+	);
+	$items['workshops/college/add_college'] = array(
 		'title' => 'Add New College Details',
 		'description' => 'Adding new college details detail',
 		'page callback' => 'drupal_get_form',
 		'page arguments' => array('workshops_add_college_form'),
 		'access arguments' => array('Workshop Add New College'),
-		'type' => MENU_NORMAL_ITEM,
+		'type' => MENU_LOCAL_TASK,
 		'file' => 'add_college.inc',
 	);
-	$items['workshops/edit_college'] = array(
+	$items['workshops/college/edit_college'] = array(
 		'title' => 'Edit College Details',
 		'description' => 'Adding new college details detail',
 		'page callback' => 'drupal_get_form',
@@ -34,14 +42,14 @@ function workshops_menu(){
 		'type' => MENU_NORMAL_ITEM,
 		'file' => 'add_college.inc',
 	);
-	$items['workshops/list_college'] = array(
+	$items['workshops/college/list_college'] = array(
 		'title' => 'Listing College Details',
 		'page callback' => 'workshops_list_college_details',
 		'access arguments' => array('Workshop Add New College'),
-		'type' => MENU_NORMAL_ITEM,
+		'type' => MENU_DEFAULT_LOCAL_TASK,
 		'file' => 'add_college.inc',
 	);
-	$items['workshops/get_college_details'] = array(
+	$items['workshops/college/get_college_details'] = array(
 		'title' => 'Add New College Details',
 		'description' => 'Adding new college details detail',
 		'page callback' => 'get_college_details',
@@ -93,7 +101,41 @@ function workshops_menu(){
 		'type' => MENU_NORMAL_ITEM,
 		'file' => 'test_request.inc',
 	);
-
+	$items['workshops/list_test_requests'] = array(
+		'title' => 'Listing Test Request Details',
+		'page callback' => 'workshops_list_test_requests',
+		'access arguments' => array('Test Request List'),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'workshop_request.inc',
+	);
+	$items['workshops/test_confirm'] = array(
+		'title' => 'Confirm Test Request Details',
+		'page callback' => 'workshops_test_confirm',
+		'access arguments' => array('Test Request List'),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'test_request.inc',
+	);
+	$items['workshops/workshop_detail'] = array(
+		'title' => 'Workshop Details',
+		'page callback' => 'workshop_detail',
+		'access arguments' => array('Workshop Detail'),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'workshop_detail.inc'
+	);
+	$items['workshops/get_workshop_details'] = array(
+		'title' => 'Add New College Details',
+		'description' => 'Adding new college details detail',
+		'page callback' => 'get_workshop_details',
+		'access arguments' => array('Workshop Detail'),
+		'type' => MENU_NORMAL_ITEM,
+	);
+	$items['workshops/participant_register'] = array(
+		'title' => 'Participant Register',
+		'page callback' => 'participant_register',
+		'access arguments' => array('Participant Register'),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'participant_register.inc'
+	);
 
   return $items;
 }
@@ -113,6 +155,18 @@ function get_college_details(){
 function get_academic_details(){
 	if(isset($_POST['academic_code'])){
 		$query = "select * from academic_center where academic_code='".$_POST['academic_code']."'";
+		db_set_active('workshop_info');
+		$result = db_query($query);
+		db_set_active('default');
+		$row = db_fetch_object($result);
+		echo json_encode($row);
+		exit;
+	}
+}
+
+function get_workshop_details(){
+	if(isset($_POST['workshop_code'])){
+		$query = "select * from workshop_requests where workshop_code='".$_POST['workshop_code']."'";
 		db_set_active('workshop_info');
 		$result = db_query($query);
 		db_set_active('default');

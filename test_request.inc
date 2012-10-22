@@ -1,11 +1,11 @@
 <?php
 	
-	function workshops_workshop_request(){
+	function workshops_test_request(){
 		$output = '<div class="form-item" id="academic-details"></div>';
-		$output .= drupal_get_form('workshops_workshop_request_form');
+		$output .= drupal_get_form('workshops_test_request_form');
 		return $output;
 	}
-	function workshops_workshop_request_form(){
+	function workshops_test_request_form(){
 		$hour = array('' => '');
 		$minite = array('' => '');
 		$foss_category = array('' => '');
@@ -125,7 +125,7 @@
 		
 		return $form;
 	}
-	function workshops_workshop_request_form_validate($form, &$form_state){
+	function workshops_test_request_form_validate($form, &$form_state){
 		if (!preg_match('/^[0-9\ \+]{0,15}$/', $form_state['values']['phone'])){
 			form_set_error('phone number', t('Invalid Phone number'));
 		}
@@ -135,22 +135,22 @@
   		return;
 
 	}
-	function workshops_workshop_request_form_submit($form, &$form_state){
+	function workshops_test_request_form_submit($form, &$form_state){
 		print_r($form_state['values']);
 		$pref_wkshop_date = $form_state['values']['pref_wkshop_date']['year'].'-'.$form_state['values']['pref_wkshop_date']['month'].'-'.$form_state['values']['pref_wkshop_date']['day'];
 		$pref_wkshop_time = $form_state['values']['pref_wkshop_time'].':'.$form_state['values']['pref_wkshop_minute'];
-		$query = "insert into  workshop_requests values('','', '".$form_state['values']['academic_code']."', '".$form_state['values']['department']."', '".$pref_wkshop_date."','', '".$pref_wkshop_time."', '', '".$form_state['values']['foss_category']."', '".$form_state['values']['pref_language']."',''".")";
+		$query = "insert into  test_requests values('','', '".$form_state['values']['academic_code']."', '".$form_state['values']['department']."', '".$pref_wkshop_date."','', '".$pref_wkshop_time."', '', '".$form_state['values']['foss_category']."', '".$form_state['values']['pref_language']."',''".")";
 		db_set_active('workshop_info');
 		if(db_query($query)){
-			drupal_set_message('Workshop Request Details Added Successfully');
+			drupal_set_message('Test Request Details Added Successfully');
 		}else {
-			drupal_set_message('Error Adding Workshop Request Details');
+			drupal_set_message('Error Adding Test Request Details');
 		}
 		db_set_active('default');
 	}
 
-	function workshops_list_workshop_request(){
-		$query = "SELECT * FROM {workshop_requests} WHERE status!=1 ORDER BY foss_category, pref_language ASC";
+	function workshops_list_test_requests(){
+		/*$query = "SELECT * FROM {test_requests} WHERE status!=1 ORDER BY foss_category, pref_language ASC";
 		$header = array('', 'FOSS Category', 'Language', 'Institution Name', 'Department', 'Preferred date & time', 'Action');
 		$tablesort = tablesort_sql($header);
 		db_set_active('workshop_info');
@@ -160,7 +160,7 @@
 		$sno = 1;
 		
 		while ($item = db_fetch_object($result)) {
-			$row[] = array($sno++, $item->foss_category, $item->pref_language, $item->academic_code, $item->department, $item->pref_wkshop_date.":".$item->pref_wkshop_time, l('Confirm', 'workshops/workshop_confirm/'. $item->id));
+			$row[] = array($sno++, $item->foss_category, $item->pref_language, $item->academic_code, $item->department, $item->pref_wkshop_date.":".$item->pref_wkshop_time, l('Confirm', 'workshops/test_confirm/'. $item->id));
 		}
 		if (count($row) == 0) {
 			$output .= '<div style="color:red;text-align:center;">No video tutorial available for selected FOSS category.</div>';
@@ -168,13 +168,13 @@
 			drupal_set_message($message);
 			$output = theme('table', $header, $row);
 			$output .= theme('pager');
-		}
-		return $output;
+		} */
+		return "<p>hi</p>";
 	}
 
-	function workshops_workshop_confirm($id = NULL){
+	function workshops_test_confirm($id = NULL){
 		if($id){
-			$query = "select * from {workshop_requests} WHERE id='". $id."'";
+			$query = "select * from {test_requests} WHERE id='". $id."'";
 			db_set_active('workshop_info');
 			$result = db_query($query);
 			$item = db_fetch_object($result);
@@ -190,14 +190,14 @@
 			$output .= '<tr><td>FOSS Category</td><td>: '.$item->foss_category.'</td></tr>';
 			$output .= '<tr><td>Preferred Date & Time</td><td>: '.$item->pref_wkshop_date.' '.$item->pref_wkshop_time.'</td></tr>';
 			$output .= '</table></div>';
-			$output .= drupal_get_form('workshops_workshop_confirm_form');
+			$output .= drupal_get_form('workshops_test_confirm_form');
 			return $output;
 		}else{
 			return "<p>Sorry, no data found.</p>";
 		}
 	}
 
-	function workshops_workshop_confirm_form(){
+	function workshops_test_confirm_form(){
 		$hour = array('' => '');
 		$minite = array('' => '');
 		$i=0;
@@ -249,7 +249,7 @@
 		);
 		return $form;
 	}
-	function workshops_workshop_confirm_form_validate($form, &$form_state){
+	function workshops_test_confirm_form_validate($form, &$form_state){
 		// if (!preg_match('/^[0-9\ \+]{0,15}$/', $form_state['values']['phone'])){
 		// 	form_set_error('phone number', t('Invalid Phone number'));
 		// }
@@ -259,23 +259,24 @@
   		return;
 
 	}
-	function workshops_workshop_confirm_form_submit($form, &$form_state){
+	function workshops_test_confirm_form_submit($form, &$form_state){
 		print_r($form_state['values']);
 		$cfm_wkshop_date = $form_state['values']['cfm_wkshop_date']['year'].'-'.$form_state['values']['cfm_wkshop_date']['month'].'-'.$form_state['values']['cfm_wkshop_date']['day'];
 		$cfm_wkshop_time = $form_state['values']['cfm_wkshop_time'].':'.$form_state['values']['cfm_wkshop_minute'];
-
+		$test_code = 'TC-'.$form_state['values']['id'];
 		$transition = array(
 				'id' => $form_state['values']['id'],
 				'cfm_wkshop_date' => $cfm_wkshop_date,
-				'cfm_wkshop_time' => $cfm_wkshop_time
+				'cfm_wkshop_time' => $cfm_wkshop_time,
+				'workshop_code' => $workshop_code
 			);
 		//$query = "insert into  workshop_requests values('','', '".$form_state['values']['academic_code']."', '".$form_state['values']['department']."', '".$pref_wkshop_date."','', '".$pref_wkshop_time."', '', '".$form_state['values']['foss_category']."', '".$form_state['values']['pref_language']."',''".")";
 		db_set_active('workshop_info');
 		//if(db_query($query)){
-		if(drupal_write_record('workshop_requests', $transition, 'id')){
-			drupal_set_message('Workshop Request Details Added Successfully');
+		if(drupal_write_record('test_requests', $transition, 'id')){
+			drupal_set_message('Test Confirm Details Added Successfully');
 		}else {
-			drupal_set_message('Error Adding Workshop Request Details');
+			drupal_set_message('Error Adding Test Confirm Details');
 		}
 		db_set_active('default');
 	}

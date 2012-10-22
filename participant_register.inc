@@ -58,21 +58,24 @@
 
 	}
 	function participant_register_form_submit($form, &$form_state){
-		echo '<pre>';
-		print_r($form_state);
-		db_set_active('moodle');
+		//echo '<pre>';
+		//print_r($form_state);
 		$username = $form_state['values']['name_of_participants'].date("his");
-		$password = '';
-		$query = "insert into  participant_registers(confirmed, username, password, firstname, email, institution) values(1, '".$username."', '".$password."', '".$form_state['values']['name_of_participants']."', '".$form_state['values']['email']."', '".$form_state['values']['academic_code']."')";
-		echo $query;
-		exit;
-		$query = "insert into  participant_registers values('', '".$form_state['values']['workshop_code']."', '".$form_state['values']['no_of_participants']."', '".$form_state['values']['name_of_invigilator']."')";
-		db_set_active('workshop_info');
+		$password = md5($username);
+		$query = "insert into  {mdl_user} (confirmed, mnethostid, username, password, firstname, email, institution) values(1, 1,'".$username."', '".$password."', '".$form_state['values']['name_of_participants']."', '".$form_state['values']['email']."', '".$form_state['values']['academic_code']."')";
+		db_set_active('moodle');
 		if(db_query($query)){
-			drupal_set_message('Resource Workshop Details Added Successfully');
+			drupal_set_message('Please, check your email for login Details.');
 		}else {
-			drupal_set_message('Error Adding Workshop Details');
+			drupal_set_message('Error Adding Workshop Details.');
 		}
+		$query = "insert into  {users} (name, pass, mail, created, status) values('".$username."', '".$password."', '".$form_state['values']['email']."', UNIX_TIMESTAMP(), 1)";
 		db_set_active('default');
+
+		if(db_query($query)){
+			drupal_set_message('Please, check your email for login Details.');
+		}else {
+			drupal_set_message('Sorry, somthing went wrong, please try again.');
+		}
 	}
 ?>

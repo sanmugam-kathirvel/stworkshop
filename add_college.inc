@@ -151,6 +151,7 @@ function workshops_add_college_form_submit($form, &$form_state){
 		drupal_set_message('Error Adding College Details');
 	}
 	db_set_active('default');
+	drupal_goto($path = 'workshops/college', $query = NULL, $fragment = NULL, $http_response_code = 302);
 	// echo $query;
 	// exit;
 }
@@ -216,10 +217,10 @@ function workshops_edit_college_form($form_state, $id) {
 	$form['#attributes'] = array('enctype' => "multipart/form-data");
 
 	$form['state'] = array(
-		'#type' => 'testfield',
+		'#type' => 'textfield',
 		'#title' => t('State'),
 		'#required' => TRUE,
-		'#selected' => $item->state_code,
+		'#size' => 30,
 		'#attributes' => array('readonly' => 'readonly', 'class' => 'college_state'),
 		'#value' => $item->state_code,
 	);
@@ -306,10 +307,12 @@ function workshops_edit_college_form_submit($form, &$form_state){
 	db_set_active('workshop_info');
 	if(db_query($query)){
 		drupal_set_message('College Details Added Successfully');
+		drupal_goto($path = 'workshops/college', $query = NULL, $fragment = NULL, $http_response_code = 302);
 	}else {
 		drupal_set_message('Error Adding College Details');
 	}
 	db_set_active('default');
+
 	// echo $query;
 	// exit;
 }

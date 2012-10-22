@@ -67,24 +67,24 @@
 			'#required' => TRUE,
 			'#attributes' => array('class' => 'department')
 		);
-		$form['pref_wkshop_date'] = array(
+		$form['pref_test_date'] = array(
 			'#type' => 'date',
 			'#title' => t('Preferred Workshop Date'),
 			'#required' => TRUE,
-			'#attributes' => array('class' => 'pref_wkshop_date')
+			'#attributes' => array('class' => 'pref_test_date')
 		);
-		$form['pref_wkshop_time'] = array(
+		$form['pref_test_time'] = array(
 			'#type' => 'select',
 			'#title' => t('Preferred Workshop Time'),
 			'#required' => TRUE,
 			'#options' => $hour,
-			'#attributes' => array('class' => 'pref_wkshop_time')
+			'#attributes' => array('class' => 'pref_test_time')
 		);
-		$form['pref_wkshop_minute'] = array(
+		$form['pref_test_minute'] = array(
 			'#type' => 'select',
 			'#required' => TRUE,
 			'#options' => $minite,
-			'#attributes' => array('class' => 'pref_wkshop_minute')
+			'#attributes' => array('class' => 'pref_test_minute')
 		);
 		$form['foss_category'] = array(
 			'#type' => 'select',
@@ -137,9 +137,9 @@
 	}
 	function workshops_test_request_form_submit($form, &$form_state){
 		print_r($form_state['values']);
-		$pref_wkshop_date = $form_state['values']['pref_wkshop_date']['year'].'-'.$form_state['values']['pref_wkshop_date']['month'].'-'.$form_state['values']['pref_wkshop_date']['day'];
-		$pref_wkshop_time = $form_state['values']['pref_wkshop_time'].':'.$form_state['values']['pref_wkshop_minute'];
-		$query = "insert into  test_requests values('','', '".$form_state['values']['academic_code']."', '".$form_state['values']['department']."', '".$pref_wkshop_date."','', '".$pref_wkshop_time."', '', '".$form_state['values']['foss_category']."', '".$form_state['values']['pref_language']."',''".")";
+		$pref_test_date = $form_state['values']['pref_test_date']['year'].'-'.$form_state['values']['pref_test_date']['month'].'-'.$form_state['values']['pref_test_date']['day'];
+		$pref_test_time = $form_state['values']['pref_test_time'].':'.$form_state['values']['pref_test_minute'];
+		$query = "insert into  test_requests values('','', '".$form_state['values']['academic_code']."', '".$form_state['values']['department']."', '".$pref_test_date."','', '".$pref_test_time."', '', '".$form_state['values']['foss_category']."', '".$form_state['values']['pref_language']."',''".")";
 		db_set_active('workshop_info');
 		if(db_query($query)){
 			drupal_set_message('Test Request Details Added Successfully');
@@ -149,8 +149,8 @@
 		db_set_active('default');
 	}
 
-	function workshops_list_test_requests(){
-		/*$query = "SELECT * FROM {test_requests} WHERE status!=1 ORDER BY foss_category, pref_language ASC";
+	function workshops_list_test_request(){
+		$query = "SELECT * FROM {test_requests} WHERE status=0 ORDER BY foss_category, pref_language ASC";
 		$header = array('', 'FOSS Category', 'Language', 'Institution Name', 'Department', 'Preferred date & time', 'Action');
 		$tablesort = tablesort_sql($header);
 		db_set_active('workshop_info');
@@ -160,16 +160,62 @@
 		$sno = 1;
 		
 		while ($item = db_fetch_object($result)) {
-			$row[] = array($sno++, $item->foss_category, $item->pref_language, $item->academic_code, $item->department, $item->pref_wkshop_date.":".$item->pref_wkshop_time, l('Confirm', 'workshops/test_confirm/'. $item->id));
+			$row[] = array($sno++, $item->foss_category, $item->pref_language, $item->academic_code, $item->department, $item->pref_test_date." ".$item->pref_test_time, l('Confirm', 'workshops/test_confirm/'. $item->id));
 		}
 		if (count($row) == 0) {
-			$output .= '<div style="color:red;text-align:center;">No video tutorial available for selected FOSS category.</div>';
+			$output .= '<div style="color:red;text-align:center;">List is empty.</div>';
 		} else {
 			drupal_set_message($message);
 			$output = theme('table', $header, $row);
 			$output .= theme('pager');
-		} */
-		return "<p>hi</p>";
+		}
+		return $output;
+	}
+
+	function workshops_list_test_approval(){
+		$query = "SELECT * FROM {test_requests} WHERE status=1 ORDER BY foss_category, pref_language ASC";
+		$header = array('', 'FOSS Category', 'Language', 'Institution Name', 'Department', 'Confirmed date & time', 'Action');
+		$tablesort = tablesort_sql($header);
+		db_set_active('workshop_info');
+		$result = pager_query($query . $tablesort, 30, 0, NULL);
+		db_set_active('default');
+		$row = array();
+		$sno = 1;
+		
+		while ($item = db_fetch_object($result)) {
+			$row[] = array($sno++, $item->foss_category, $item->pref_language, $item->academic_code, $item->department, $item->cfm_test_date." ".$item->cfm_test_time, l('Confirm', 'workshops/test_confirm/'. $item->id));
+		}
+		if (count($row) == 0) {
+			$output .= '<div style="color:red;text-align:center;">List is empty.</div>';
+		} else {
+			drupal_set_message($message);
+			$output = theme('table', $header, $row);
+			$output .= theme('pager');
+		}
+		return $output;
+	}
+
+	function workshops_list_test_completed(){
+		$query = "SELECT * FROM {test_requests} WHERE status=2 ORDER BY foss_category, pref_language ASC";
+		$header = array('', 'FOSS Category', 'Language', 'Institution Name', 'Department', 'Date & Time', 'Action');
+		$tablesort = tablesort_sql($header);
+		db_set_active('workshop_info');
+		$result = pager_query($query . $tablesort, 30, 0, NULL);
+		db_set_active('default');
+		$row = array();
+		$sno = 1;
+		
+		while ($item = db_fetch_object($result)) {
+			$row[] = array($sno++, $item->foss_category, $item->pref_language, $item->academic_code, $item->department, $item->cfm_test_date." ".$item->cfm_test_time, l('View', 'workshops/test_confirm/'. $item->id));
+		}
+		if (count($row) == 0) {
+			$output .= '<div style="color:red;text-align:center;">List is empty.</div>';
+		} else {
+			drupal_set_message($message);
+			$output = theme('table', $header, $row);
+			$output .= theme('pager');
+		}
+		return $output;
 	}
 
 	function workshops_test_confirm($id = NULL){
@@ -188,18 +234,18 @@
 			$output .= '<tr><td>Academic Code</td><td>: '.$item->academic_code.'</td></tr>';
 			$output .= '<tr><td>Language</td><td>: '.$item->pref_language.'</td></tr>';
 			$output .= '<tr><td>FOSS Category</td><td>: '.$item->foss_category.'</td></tr>';
-			$output .= '<tr><td>Preferred Date & Time</td><td>: '.$item->pref_wkshop_date.' '.$item->pref_wkshop_time.'</td></tr>';
+			$output .= '<tr><td>Preferred Date & Time</td><td>: '.$item->pref_test_date.' '.$item->pref_test_time.'</td></tr>';
 			$output .= '</table></div>';
-			$output .= drupal_get_form('workshops_test_confirm_form');
+			$output .= drupal_get_form('workshops_test_confirm_form', $id);
 			return $output;
 		}else{
 			return "<p>Sorry, no data found.</p>";
 		}
 	}
 
-	function workshops_test_confirm_form(){
-		$hour = array('' => '');
-		$minite = array('' => '');
+	function workshops_test_confirm_form($form_state, $id){
+		$hour = array();
+		$minite = array();
 		$i=0;
 		while($i <= 23){
 			if($i < 10){
@@ -222,26 +268,26 @@
 		$form['id'] = array(
 			'#type' => 'hidden',
 			'#title' => t('Preferred Workshop Date'),
-			'#value' => $item->id,
+			'#value' => $id,
 		);
-		$form['cfm_wkshop_date'] = array(
+		$form['cfm_test_date'] = array(
 			'#type' => 'date',
 			'#title' => t('Confirm Workshop Date'),
 			'#required' => TRUE,
-			'#attributes' => array('class' => 'cfm_wkshop_date')
+			'#attributes' => array('class' => 'cfm_test_date')
 		);
-		$form['cfm_wkshop_time'] = array(
+		$form['cfm_test_time'] = array(
 			'#type' => 'select',
 			'#title' => t('Confirm Workshop Time'),
 			'#required' => TRUE,
 			'#options' => $hour,
-			'#attributes' => array('class' => 'cfm_wkshop_time')
+			'#attributes' => array('class' => 'cfm_test_time')
 		);
-		$form['cfm_wkshop_minute'] = array(
+		$form['cfm_test_minute'] = array(
 			'#type' => 'select',
 			'#required' => TRUE,
 			'#options' => $minite,
-			'#attributes' => array('class' => 'cfm_wkshop_minute')
+			'#attributes' => array('class' => 'cfm_test_minute')
 		);
 		$form['submit'] = array(
 			'#type' => 'submit',
@@ -261,19 +307,13 @@
 	}
 	function workshops_test_confirm_form_submit($form, &$form_state){
 		print_r($form_state['values']);
-		$cfm_wkshop_date = $form_state['values']['cfm_wkshop_date']['year'].'-'.$form_state['values']['cfm_wkshop_date']['month'].'-'.$form_state['values']['cfm_wkshop_date']['day'];
-		$cfm_wkshop_time = $form_state['values']['cfm_wkshop_time'].':'.$form_state['values']['cfm_wkshop_minute'];
+		$cfm_test_date = $form_state['values']['cfm_test_date']['year'].'-'.$form_state['values']['cfm_test_date']['month'].'-'.$form_state['values']['cfm_test_date']['day'];
+		$cfm_test_time = $form_state['values']['cfm_test_time'].':'.$form_state['values']['cfm_test_minute'].':00';
 		$test_code = 'TC-'.$form_state['values']['id'];
-		$transition = array(
-				'id' => $form_state['values']['id'],
-				'cfm_wkshop_date' => $cfm_wkshop_date,
-				'cfm_wkshop_time' => $cfm_wkshop_time,
-				'workshop_code' => $workshop_code
-			);
-		//$query = "insert into  workshop_requests values('','', '".$form_state['values']['academic_code']."', '".$form_state['values']['department']."', '".$pref_wkshop_date."','', '".$pref_wkshop_time."', '', '".$form_state['values']['foss_category']."', '".$form_state['values']['pref_language']."',''".")";
+
+		$query = "update {test_requests} set test_code='".$test_code."', cfm_test_date='".$cfm_test_date."', cfm_test_time='".$cfm_test_time."', status=1 where id=".$form_state['values']['id'];
 		db_set_active('workshop_info');
-		//if(db_query($query)){
-		if(drupal_write_record('test_requests', $transition, 'id')){
+		if(db_query($query)){
 			drupal_set_message('Test Confirm Details Added Successfully');
 		}else {
 			drupal_set_message('Error Adding Test Confirm Details');

@@ -150,7 +150,7 @@
 	}
 
 	function workshops_list_workshop_request(){
-		$query = "SELECT * FROM {workshop_requests} WHERE status!=1 ORDER BY foss_category, pref_language ASC";
+		$query = "SELECT * FROM {workshop_requests} WHERE status=0 ORDER BY foss_category, pref_language ASC";
 		$header = array('', 'FOSS Category', 'Language', 'Institution Name', 'Department', 'Preferred date & time', 'Action');
 		$tablesort = tablesort_sql($header);
 		db_set_active('workshop_info');
@@ -160,10 +160,56 @@
 		$sno = 1;
 		
 		while ($item = db_fetch_object($result)) {
-			$row[] = array($sno++, $item->foss_category, $item->pref_language, $item->academic_code, $item->department, $item->pref_wkshop_date.":".$item->pref_wkshop_time, l('Confirm', 'workshops/workshop_confirm/'. $item->id));
+			$row[] = array($sno++, $item->foss_category, $item->pref_language, $item->academic_code, $item->department, $item->pref_wkshop_date." ".$item->pref_wkshop_time, l('Confirm', 'workshops/workshop_confirm/'. $item->id));
 		}
 		if (count($row) == 0) {
-			$output .= '<div style="color:red;text-align:center;">No video tutorial available for selected FOSS category.</div>';
+			$output .= '<div style="color:red;text-align:center;">List is empty.</div>';
+		} else {
+			drupal_set_message($message);
+			$output = theme('table', $header, $row);
+			$output .= theme('pager');
+		}
+		return $output;
+	}
+
+	function workshops_list_workshop_approval(){
+		$query = "SELECT * FROM {workshop_requests} WHERE status=1 ORDER BY foss_category, pref_language ASC";
+		$header = array('', 'FOSS Category', 'Language', 'Institution Name', 'Department', 'Confirmed date & time', 'Action');
+		$tablesort = tablesort_sql($header);
+		db_set_active('workshop_info');
+		$result = pager_query($query . $tablesort, 30, 0, NULL);
+		db_set_active('default');
+		$row = array();
+		$sno = 1;
+		
+		while ($item = db_fetch_object($result)) {
+			$row[] = array($sno++, $item->foss_category, $item->pref_language, $item->academic_code, $item->department, $item->cfm_wkshop_date." ".$item->cfm_wkshop_time, l('Confirm', 'workshops/workshop_confirm/'. $item->id));
+		}
+		if (count($row) == 0) {
+			$output .= '<div style="color:red;text-align:center;">List is empty.</div>';
+		} else {
+			drupal_set_message($message);
+			$output = theme('table', $header, $row);
+			$output .= theme('pager');
+		}
+		return $output;
+	}
+
+	function workshops_list_workshop_completed(){
+		$query = "SELECT * FROM {workshop_requests} WHERE status=2 ORDER BY foss_category, pref_language ASC";
+		$header = array('', 'FOSS Category', 'Language', 'Institution Name', 'Department', 'Date & Time', 'Action');
+		$tablesort = tablesort_sql($header);
+		db_set_active('workshop_info');
+		$result = pager_query($query . $tablesort, 30, 0, NULL);
+		db_set_active('default');
+		$row = array();
+		$sno = 1;
+		
+		while ($item = db_fetch_object($result)) {
+			$row[] = array($sno++, $item->foss_category, $item->pref_language, $item->academic_code, $item->department, $item->cfm_wkshop_date." ".$item->cfm_wkshop_time, l('View', 'workshops/workshop_confirm/'. $item->id));
+		}
+		if (count($row) == 0) {
+			$output .= '<div style="color:red;text-align:center;">List is empty.</div>';
 		} else {
 			drupal_set_message($message);
 			$output = theme('table', $header, $row);
@@ -190,16 +236,16 @@
 			$output .= '<tr><td>FOSS Category</td><td>: '.$item->foss_category.'</td></tr>';
 			$output .= '<tr><td>Preferred Date & Time</td><td>: '.$item->pref_wkshop_date.' '.$item->pref_wkshop_time.'</td></tr>';
 			$output .= '</table></div>';
-			$output .= drupal_get_form('workshops_workshop_confirm_form');
+			$output .= drupal_get_form('workshops_workshop_confirm_form', $id);
 			return $output;
 		}else{
 			return "<p>Sorry, no data found.</p>";
 		}
 	}
 
-	function workshops_workshop_confirm_form(){
-		$hour = array('' => '');
-		$minite = array('' => '');
+	function workshops_workshop_confirm_form($form_state, $id){
+		$hour = array();
+		$minite = array();
 		$i=0;
 		while($i <= 23){
 			if($i < 10){
@@ -222,7 +268,7 @@
 		$form['id'] = array(
 			'#type' => 'hidden',
 			'#title' => t('Preferred Workshop Date'),
-			'#value' => $item->id,
+			'#value' => $id,
 		);
 		$form['cfm_wkshop_date'] = array(
 			'#type' => 'date',
@@ -260,22 +306,17 @@
 
 	}
 	function workshops_workshop_confirm_form_submit($form, &$form_state){
-		print_r($form_state['values']);
+		
 		$cfm_wkshop_date = $form_state['values']['cfm_wkshop_date']['year'].'-'.$form_state['values']['cfm_wkshop_date']['month'].'-'.$form_state['values']['cfm_wkshop_date']['day'];
-		$cfm_wkshop_time = $form_state['values']['cfm_wkshop_time'].':'.$form_state['values']['cfm_wkshop_minute'];
+		$cfm_wkshop_time = $form_state['values']['cfm_wkshop_time'].':'.$form_state['values']['cfm_wkshop_minute'].':00';
 		$workshop_code = 'WC-'.$form_state['values']['id'];
-		// $transition = array(
-		// 		'id' => $form_state['values']['id'],
-		// 		'cfm_wkshop_date' => $cfm_wkshop_date,
-		// 		'cfm_wkshop_time' => $cfm_wkshop_time
-		// 	);
-		$query = "insert into  workshop_requests values('','', '".$form_state['values']['academic_code']."', '".$form_state['values']['department']."', '".$pref_wkshop_date."','', '".$pref_wkshop_time."', '', '".$form_state['values']['foss_category']."', '".$form_state['values']['pref_language']."',''".")";
+		$query = "update {workshop_requests} set workshop_code='".$workshop_code."', cfm_wkshop_date='".$cfm_wkshop_date."', cfm_wkshop_time='".$cfm_wkshop_time."', status=1 where id=".$form_state['values']['id'];
 		db_set_active('workshop_info');
 		if(db_query($query)){
 		//if(drupal_write_record('workshop_requests', $transition, 'id')){
-			drupal_set_message('Workshop Request Details Added Successfully');
+			drupal_set_message('Workshop Confirmation Added Successfully');
 		}else {
-			drupal_set_message('Error Adding Workshop Request Details');
+			drupal_set_message('Error Adding Workshop Confirmation Details');
 		}
 		db_set_active('default');
 	}

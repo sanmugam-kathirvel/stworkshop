@@ -1,36 +1,40 @@
 $(document).ready(function(){
 	$('.college_state').change(function(){
-		var webroot = 'http://localhost/spokentutorial.org/workshops/'
-		$.ajax({
-			type : 'POST',
-			url : webroot + "college/get_college_details",
-			data : {
-				'state_code' : $('.college_state').val() 
-			},
-			success : function(data){
-				//console.log(data);
-				output = JSON.parse(data);
-				console.log(output);
-				var ac_code_str = '';
-				if(output){
-					var aCode = parseInt(output.ac_count);
-					aCode += 1;
-					if (aCode < 10)
-						ac_code_str = '0000' + aCode;
-					else if (aCode < 99)
-						ac_code_str = '000' + aCode;
-					else if (aCode < 999)
-						ac_code_str = '00' + aCode;
-					else if (aCode < 9999)
-						ac_code_str = '0' + aCode;
-					ac_code_str = $('.college_state').val() + "-" + ac_code_str;
-					console.log(ac_code_str);
-					$('.college_academic_code').val(ac_code_str);
-				}else{
-					alert('Error fetching academic code, please refresh the page and try again');							
+		var webroot = 'http://localhost/spokentutorial.org/workshops/';
+		if($('.college_state').val() != ''){
+			$.ajax({
+				type : 'POST',
+				url : webroot + "college/get_college_details",
+				data : {
+					'state_code' : $('.college_state').val() 
+				},
+				success : function(data){
+					//console.log(data);
+					output = JSON.parse(data);
+					console.log(output);
+					var ac_code_str = '';
+					if(output){
+						var aCode = parseInt(output.ac_count);
+						aCode += 1;
+						if (aCode < 10)
+							ac_code_str = '0000' + aCode;
+						else if (aCode < 99)
+							ac_code_str = '000' + aCode;
+						else if (aCode < 999)
+							ac_code_str = '00' + aCode;
+						else if (aCode < 9999)
+							ac_code_str = '0' + aCode;
+						ac_code_str = $('.college_state').val() + "-" + ac_code_str;
+						console.log(ac_code_str);
+						$('.college_academic_code').val(ac_code_str);
+					}else{
+						alert('Error fetching academic code, please refresh the page and try again');							
+					}
 				}
-			}
-		});
+			});
+		}else{
+			$('.college_academic_code').val('');
+		}
 	});
 // resurce preson
 	$('#resource_person_state').click(function(){
@@ -101,5 +105,51 @@ $(document).ready(function(){
 			}
 		});
 	});
+
+	$('.user_name').change(function(){
+		var webroot = 'http://localhost/spokentutorial.org/workshops/'
+		this_data = $(this);
+		$.ajax({
+			type : 'POST',
+			url : webroot + "get_feedback_detail",
+			data : {
+				'user_name' : $('.user_name').val()
+			},
+			success : function(data){
+				output = JSON.parse(data);
+				if (output){
+					$('.participant_name').val(output.firstname);
+					$('.feedback_email').val(output.email);
+				}else{
+					$('.participant_name').val('');
+					$('.feedback_email').val('');
+				}	
+			}
+		});
+	});
+	$('.feedback_workshop_code').change(function(){
+		var webroot = 'http://localhost/spokentutorial.org/workshops/'
+		this_data = $(this);
+		$.ajax({
+			type : 'POST',
+			url : webroot + "get_feedback_detail",
+			data : {
+				'workshop_code' : $('.feedback_workshop_code').val() 
+			},
+			success : function(data){
+				output = JSON.parse(data);
+				console.log(data);
+				if (output){
+					$('.institution_name').val(output.institution_name);
+				}else{
+					$('.institution_name').val('');
+				}	
+			}
+		});
+	});
+	//$('.foss_recommend').change(function(){
+		//console.log($(this).parent('div').parent().next());
+
+	//});
 
 });

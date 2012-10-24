@@ -178,6 +178,13 @@ function workshops_menu(){
 		'type' => MENU_NORMAL_ITEM,
 		'file' => 'feedback.inc'
 	);
+	$items['workshops/get_feedback_detail'] = array(
+		'title' => 'Add New College Details',
+		'description' => 'Get feedback Details',
+		'page callback' => 'get_feedback_detail',
+		'access arguments' => array('Feedback'),
+		'type' => MENU_NORMAL_ITEM,
+	);
 
   return $items;
 }
@@ -216,6 +223,25 @@ function get_workshop_details(){
 		echo json_encode($row);
 		exit;
 	}
+}
+function get_feedback_detail(){
+	$row = array();
+	if(isset($_POST['user_name']) && !empty($_POST['user_name'])){
+		$query = "select firstname, email from {mdl_user} where username='".$_POST['user_name']."'";
+		db_set_active('moodle');
+		$result = db_query($query);
+		db_set_active('default');
+		$row = db_fetch_object($result);
+	}
+	if(isset($_POST['workshop_code']) && !empty($_POST['workshop_code'])){
+		$query = "SELECT academic_center.institution_name from academic_center LEFT JOIN  workshop_requests ON academic_center.academic_code = workshop_requests.academic_code WHERE workshop_requests.workshop_code ='".$_POST['workshop_code']."'";
+		db_set_active('workshop_info');
+		$result = db_query($query);
+		db_set_active('default');
+		$row = db_fetch_object($result);
+	}
+	echo json_encode($row);
+	exit;
 }
 
 

@@ -49,6 +49,13 @@ function workshops_menu(){
 		'type' => MENU_DEFAULT_LOCAL_TASK,
 		'file' => 'add_college.inc',
 	);
+	$items['workshops/college/view_college'] = array(
+		'title' => 'College Details',
+		'page callback' => 'workshops_view_college_details',
+		'access arguments' => array('Workshop Add New College'),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'add_college.inc',
+	);
 	$items['workshops/college/get_college_details'] = array(
 		'title' => 'Add New College Details',
 		'description' => 'Adding new college details detail',
@@ -107,6 +114,20 @@ function workshops_menu(){
 		'type' => MENU_NORMAL_ITEM,
 		'file' => 'workshop_request.inc',
 	);
+	$items['workshops/workshop_edit'] = array(
+		'title' => 'Edit Workshop Approval Details',
+		'page callback' => 'workshops_workshop_edit',
+		'access arguments' => array('Workshop Request List'),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'workshop_request.inc',
+	);
+	$items['workshops/view_workshop'] = array(
+		'title' => 'Workshop Details',
+		'page callback' => 'workshops_view_workshop',
+		'access arguments' => array('Workshop Request List'),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'workshop_request.inc',
+	);
 	$items['workshops/test_request'] = array(
 		'title' => 'Test Request',
 		'description' => 'Request for Test',
@@ -129,16 +150,16 @@ function workshops_menu(){
 		'type' => MENU_NORMAL_ITEM,
 		'file' => 'test_request.inc',
 	);
-	$items['workshops/list_test_completed'] = array(
-		'title' => 'List Of Completed Tests',
-		'page callback' => 'workshops_list_test_completed',
-		'access arguments' => array('Test Request'),
-		'type' => MENU_NORMAL_ITEM,
-		'file' => 'test_request.inc',
-	);
 	$items['workshops/test_confirm'] = array(
 		'title' => 'Confirm Test Request Details',
 		'page callback' => 'workshops_test_confirm',
+		'access arguments' => array('Test Request List'),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'test_request.inc',
+	);
+	$items['workshops/test_view'] = array(
+		'title' => 'Test Approval Details',
+		'page callback' => 'workshops_test_view',
 		'access arguments' => array('Test Request List'),
 		'type' => MENU_NORMAL_ITEM,
 		'file' => 'test_request.inc',

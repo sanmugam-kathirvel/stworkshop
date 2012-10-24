@@ -317,4 +317,74 @@ function workshops_edit_college_form_submit($form, &$form_state){
 	// exit;
 }
 
+function workshops_view_college_details($id = NULL){
+	if($id){
+	 	
+		$states_array = array(
+		'' => 'select state',
+		'ANP' => 'Andhra Pradesh',
+		'ARP' => 'Arunachal Pradesh',
+		'ASM' => 'Assam',
+		'BHR' => 'Bihar',
+		'CTG' => 'Chattisgarh',
+		'DDU' => 'Daman/Diu',
+		'DEL' => 'Delhi',
+		'DNG' => 'Dadar/Nag',
+		'GOA' => 'Goa',
+		'GUJ' => 'Gujarat',
+		'HAR' => 'Hariyana',
+		'HMP' => 'HimachalPradesh',
+		'JNK' => 'JammuKashmir',
+		'JHD' => 'Jharkhand',
+		'KAR' => 'Karnataka',
+		'KER' => 'Kerela',
+		'LKD' => 'Lakshadweep',
+		'MDP' => 'MadhyaPradesh',
+		'MAH' => 'Maharastra',
+		'MAN' => 'Manipur',
+		'MEG' => 'Meghalaya',
+		'MIZ' => 'Mizoram',
+		'NAG' => 'Nagaland',
+		'ODI' => 'Orissa',
+		'PCY' => 'Pondicherry',
+		'PJB' => 'Punjab',
+		'RAJ' => 'Rajasthan',
+		'SIK' => 'Sikkim',
+		'TAM' => 'TamilNadu',
+		'TRP' => 'Tripura',
+		'UTK' => 'UttarKhand',
+		'UTP' => 'UttarPradesh',
+		'WBN' => 'WestBengal',
+		'ANR' => 'Andaman/Nicobar',
+		'CHG' => 'Chandigarh',
+	);
 
+ 		$query = "select * from {academic_center} where id=".$id;
+ 		
+ 		db_set_active('workshop_info');
+ 		$result = db_query($query);
+ 		db_set_active('default');
+
+ 		if($result){
+ 			$item = db_fetch_object($result);
+ 			$output = '<table width="100%" cellpadding="6">';
+ 			$output .= '<tr><td><b>State Code</b></td><td><b>'.$item->state_code.'</b></td></tr>';
+ 			$output .= '<tr><td><b>Academic Code</b></td><td><b>'.$item->academic_code.'</b></td></tr>';
+ 			$output .= '<tr><td><b>Institution Name</b></td><td><b>'.$item->institution_name.'</b></td></tr>';
+ 			$output .= '<tr><td><b>Department</b></td><td><b>'.$item->department.'</b></td></tr>';
+ 			$output .= '<tr><td><b>Street</b></td><td><b>'.$item->street.'</b></td></tr>';
+ 			$output .= '<tr><td><b>City</b></td><td><b>'.$item->city.'</b></td></tr>';
+ 			$output .= '<tr><td><b>State</b></td><td><b>'.$states_array[$item->state_code].'</b></td></tr>';
+ 			$output .= '<tr><td><b>Pin Code</b></td><td><b>'.$item->pincode.'</b></td></tr>';
+ 			$output .= '<tr><td colspan="2"><hr /></td></tr>';
+ 			$output .= '</table>';
+
+ 			return $output;
+ 		}else {
+ 			drupal_set_message('Error accessing database workshop_info');
+ 		}
+ 	}else{
+ 		return "<p>Sorry, no data found.</p>";
+ 	}
+}
+?>

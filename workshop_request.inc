@@ -6,10 +6,10 @@
 		return $output;
 	}
 	function workshops_workshop_request_form(){
-		$hour = array('' => '');
-		$minite = array('' => '');
-		$foss_category = array('' => '');
-		$language_array = array('' => '');
+		$hour = array('' => 'Hour');
+		$minite = array('' => 'Minute');
+		$foss_category = array('' => 'Select FOSS Category');
+		$language_array = array('' => 'Select Language');
 		$i=0;
 		while($i <= 23){
 			if($i < 10){
@@ -38,18 +38,12 @@
 
 		db_set_active('default');
 
-
-		//$rows = db_fetch_object($foss_categories);
-
 		while($row = db_fetch_object($foss_categories)) {
 			$foss_category[$row->FOSS_Category] = $row->FOSS_Category;
 		}
 		while($row = db_fetch_object($languages)) {
 			$language_array[$row->Language] = $row->Language;
 		}
-
-		//print_r($language_array);
-		//exit;
 
 		$path = drupal_get_path('module', 'workshops');
 		drupal_add_js($path . '/workshops.js', 'module');
@@ -143,6 +137,7 @@
 		db_set_active('workshop_info');
 		if(db_query($query)){
 			drupal_set_message('Workshop Request Details Added Successfully');
+			drupal_goto($path = 'workshops/list_workshop_request', $query = NULL, $fragment = NULL, $http_response_code = 302);
 		}else {
 			drupal_set_message('Error Adding Workshop Request Details');
 		}
@@ -325,6 +320,7 @@
 		if(db_query($query)){
 		//if(drupal_write_record('workshop_requests', $transition, 'id')){
 			drupal_set_message('Workshop Confirmation Added Successfully');
+			drupal_goto($path = 'workshops/list_workshop_approval', $query = NULL, $fragment = NULL, $http_response_code = 302);
 		}else {
 			drupal_set_message('Error Adding Workshop Confirmation Details');
 		}
@@ -421,6 +417,7 @@
 		if(db_query($query)){
 		//if(drupal_write_record('workshop_requests', $transition, 'id')){
 			drupal_set_message('Workshop Confirmation Added Successfully');
+			drupal_goto($path = 'workshops/list_workshop_approval', $query = NULL, $fragment = NULL, $http_response_code = 302);
 		}else {
 			drupal_set_message('Error Adding Workshop Confirmation Details');
 		}
@@ -464,7 +461,22 @@
 	 			$output .= '<tr><td><b>City</b></td><td><b>'.$coll_detail->city.'</b></td></tr>';
 	 			$output .= '<tr><td><b>Pin Code</b></td><td><b>'.$coll_detail->pincode.'</b></td></tr>';
 	 			$output .= '</table>';
+	 			
+	 			$output .= '<h2>Participants Details</h2>';
+	 			$query = "select id, user_name, name, email, institution_name from {workshop_feedback} where workshop_code='".$item->workshop_code."'";
 
+	 			db_set_active('workshop_info');
+	 			$result = db_query($query);
+	 			db_set_active('default');
+	 			$output .= '<table><tr><th>User name</th><th>Name</th><th>Email</th><th>Institution Name</th><th>Action</th></tr>';
+	 			while($fd = db_fetch_object($result)){
+	 				$output .= '<tr><td>'.$fd->user_name.'</td>'.'<td>'.$fd->name.'</td>'.'<td>'.$fd->email.'</td>'.'<td>'.$fd->institution_name."</td><td>".l('View Feedback', 'workshops/feedback/'.$item->workshop_code.'/'.$fd->user_name)."</td></tr>";
+	 				
+	 			}
+	 			$output .= '</table>';
+	 			//exit;
+
+	 			
 	 			return $output;
 	 		}else {
 	 			drupal_set_message('Error accessing database workshop_info');

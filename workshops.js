@@ -123,6 +123,7 @@ $(document).ready(function(){
 				}else{
 					$('.participant_name').val('');
 					$('.feedback_email').val('');
+					$('#feedback-error').html('<p style="color:red">Please, enter currect User Name</p>');
 				}	
 			}
 		});
@@ -140,9 +141,10 @@ $(document).ready(function(){
 				output = JSON.parse(data);
 				console.log(data);
 				if (output){
-					$('.institution_name').val(output.institution_name);
+					$('.institution_name').val(output.institution_name);					
 				}else{
 					$('.institution_name').val('');
+					$('#feedback-error').html('<p style="color:red">Please, enter currect workshop code</p>');
 				}	
 			}
 		});

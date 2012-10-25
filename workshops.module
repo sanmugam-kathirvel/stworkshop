@@ -206,6 +206,14 @@ function workshops_menu(){
 		'access arguments' => array('Feedback'),
 		'type' => MENU_NORMAL_ITEM,
 	);
+	$items['workshops/feedback/%/%'] = array(
+		'title' => 'Feedback',
+		'page arguments' => array(2,3),
+		'page callback' => 'view_feedback',
+		'access arguments' => array('Feedback'),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'feedback.inc'
+	);
 
   return $items;
 }

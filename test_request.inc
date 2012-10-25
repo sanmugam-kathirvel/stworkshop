@@ -6,10 +6,10 @@
 		return $output;
 	}
 	function workshops_test_request_form(){
-		$hour = array('' => '');
-		$minite = array('' => '');
-		$foss_category = array('' => '');
-		$language_array = array('' => '');
+		$hour = array('' => 'Hour');
+		$minite = array('' => 'Minute');
+		$foss_category = array('' => 'Select FOSS Category');
+		$language_array = array('' => 'Select Language');
 		$i=0;
 		while($i <= 23){
 			if($i < 10){
@@ -47,9 +47,6 @@
 		while($row = db_fetch_object($languages)) {
 			$language_array[$row->Language] = $row->Language;
 		}
-
-		print_r($language_array);
-		exit;
 
 		$path = drupal_get_path('module', 'workshops');
 		drupal_add_js($path . '/workshops.js', 'module');
@@ -136,7 +133,6 @@
 
 	}
 	function workshops_test_request_form_submit($form, &$form_state){
-		print_r($form_state['values']);
 		$pref_test_date = $form_state['values']['pref_test_date'];
 		$pref_test_time = $form_state['values']['pref_test_time'].':'.$form_state['values']['pref_test_minute'];
 		$query = "insert into  test_requests values('','', '".$form_state['values']['academic_code']."', '".$form_state['values']['department']."', '".$pref_test_date."','', '".$pref_test_time."', '', '".$form_state['values']['foss_category']."', '".$form_state['values']['pref_language']."',''".")";
@@ -147,6 +143,7 @@
 			drupal_set_message('Error Adding Test Request Details');
 		}
 		db_set_active('default');
+		drupal_goto($path = 'workshops/list_test_request', $query = NULL, $fragment = NULL, $http_response_code = 302);
 	}
 
 	function workshops_list_test_request(){
@@ -281,12 +278,12 @@
 		return $form;
 	}
 	function workshops_test_confirm_form_validate($form, &$form_state){
-		 if (!preg_match('/^[0-9\ \+]{0,15}$/', $form_state['values']['phone'])){
-		 	form_set_error('phone number', t('Invalid Phone number'));
-		 }
-		 if (!preg_match('/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/', $form_state['values']['email'])){
-		 	form_set_error('email', t('Invalid Email'));
-		 }
+		 // if (!preg_match('/^[0-9\ \+]{0,15}$/', $form_state['values']['phone'])){
+		 // 	form_set_error('phone number', t('Invalid Phone number'));
+		 // }
+		 // if (!preg_match('/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/', $form_state['values']['email'])){
+		 // 	form_set_error('email', t('Invalid Email'));
+		 // }
   		return;
 
 	}
@@ -300,6 +297,7 @@
 		db_set_active('workshop_info');
 		if(db_query($query)){
 			drupal_set_message('Test Confirm Details Added Successfully');
+				drupal_goto($path = 'workshops/list_test_approval', $query = NULL, $fragment = NULL, $http_response_code = 302);
 		}else {
 			drupal_set_message('Error Adding Test Confirm Details');
 		}

@@ -273,5 +273,4 @@ function get_feedback_detail(){
 	exit;
 }
 
-
 ?>

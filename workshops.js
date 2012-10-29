@@ -1,4 +1,5 @@
 $(document).ready(function(){
+	new datepickr('edit-cfm-wkshop-date', { dateFormat: 'Y-m-d' });
 	$('.college_state').change(function(){
 		var webroot = 'http://localhost/spokentutorial.org/workshops/';
 		if($('.college_state').val() != ''){

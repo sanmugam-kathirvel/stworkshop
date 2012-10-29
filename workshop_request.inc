@@ -220,6 +220,10 @@
 	}
 
 	function workshops_workshop_confirm($id = NULL){
+		$path = drupal_get_path('module', 'workshops');
+		drupal_add_js($path . '/datepickr.js');
+		drupal_add_css($path . '/datepickr.css');
+		drupal_add_js($path . '/workshops.js');
 		if($id){
 			$query = "select * from {workshop_requests} WHERE id='". $id."'";
 			db_set_active('workshop_info');
@@ -277,7 +281,7 @@
 			'#required' => TRUE,
 			'#size' => 30,
 			'#value' => $date_val,
-			'#attributes' => array('class' => 'cfm_wkshop_date', 'readonly' => 'readonly')
+			'#attributes' => array('class' => 'cfm_wkshop_date', 'readonly' => 'readonly'),
 		);
 		$form['cfm_wkshop_time'] = array(
 			'#type' => 'select',
@@ -327,6 +331,10 @@
 		db_set_active('default');
 	}
 	function workshops_workshop_edit($id = NULL){
+		$path = drupal_get_path('module', 'workshops');
+		drupal_add_js($path . '/datepickr.js');
+		drupal_add_css($path . '/datepickr.css');
+		drupal_add_js($path . '/workshops.js');
 		if($id){
 			$query = "select * from {workshop_requests} WHERE id='". $id."'";
 			db_set_active('workshop_info');

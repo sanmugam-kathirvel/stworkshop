@@ -273,4 +273,39 @@ function get_feedback_detail(){
 	exit;
 }
 
+
+	function workshops_help($path, $arg) {
+		if ($path == 'admin/help#workshop') {
+			$txt = 'This module managing all the workshop detail';
+			return '<p>'. t($txt) .'</p>';
+		}
+	}
+
+	/**
+	* Implementation of hook_block().
+	*/
+
+	function workshops_block($op = 'list', $delta = 0, $edit = array()) {
+		switch ($op) {case 'list':
+			$blocks[0]['info'] = t('What\'s New');
+			return $blocks;
+		case 'view':
+			$item = get_link_item();
+			if(!empty($item)) {
+				$content = $item;
+				$blocks['subject'] = t('Manage Workshop');
+				$blocks['content'] = $content;
+				return $blocks;
+			}
+		}
+	}
+			
+	function get_link_item() {
+		$links = '';
+		$links .= '<b>'.$item->FOSS_Category.'</b><br />';
+		$links .= '<ul><li><a href="'.$GLOBALS['base_path']."'".'workshops/college>College Details</a></li></ul>';
+
+		return $links;
+	}
+
 ?>

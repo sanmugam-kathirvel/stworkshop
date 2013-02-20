@@ -169,9 +169,39 @@
 
 	function workshops_list_workshop_request(){
 		global $user;
-		$query = "select wr.*, o.organiser_name  from workshop_requests wr, organiser o where wr.academic_code in (SELECT ac.`academic_code` FROM `academic_center` ac, resource_person rp WHERE rp.user_uid=".$user->uid." and FIND_IN_SET(ac.state_code, rp.states) > 0) and wr.status=0 and wr.organiser_id=o.organiser_id";
-		$count_query = "select count(*) from workshop_requests wr, organiser o where wr.academic_code in (SELECT ac.`academic_code` FROM `academic_center` ac, resource_person rp WHERE rp.user_uid=".$user->uid." and FIND_IN_SET(ac.state_code, rp.states) > 0) and wr.status=0 and wr.organiser_id=o.organiser_id";
-		$header = array('Sno', 'FOSS', 'Academic Center Code', 'Department', 'Organiser', 'Action');
+		
+		$query = "";
+		$count_query = "";
+		
+		if(in_array('organiser', array_values($user->roles))) {
+			$query = "select wr.*, o.organiser_name from workshop_requests wr, organiser o where wr.organiser_id=".$user->uid." and wr.status=0 and wr.organiser_id=o.organiser_id";
+			$count_query = "select count(*) from workshop_requests wr, organiser o where wr.organiser_id=".$user->uid." and wr.status=0 and wr.organiser_id=o.organiser_id";
+		}
+
+		if(in_array('resource_person', array_values($user->roles))) {
+			$query = "select states from resource_person where user_uid=".$user->uid;
+			db_set_active('workshop_info');
+			$result = db_query($query);
+			db_set_active('default');
+			$row = db_fetch_object($result);
+			$state_code_arr = explode(',', $row->states);
+		
+			$tmp_query_param = "";
+			foreach($state_code_arr as $st_code){
+				if($tmp_query_param != ""){
+					$tmp_query_param .= " or ";
+				}
+			$tmp_query_param .=	"wr.academic_code like '".$st_code."%'";
+			}
+			$query = "select wr.*, o.organiser_name from workshop_requests wr, organiser o where (".$tmp_query_param.") and wr.status=0 and wr.organiser_id=o.organiser_id";
+		//echo $query."<br /><br />";
+			$count_query = "select count(*) from workshop_requests wr, organiser o where (".$tmp_query_param.") and wr.status=0 and wr.organiser_id=o.organiser_id";
+		//echo $count_query."<br />"; die;
+		}
+		if(in_array('organiser', array_values($user->roles)))
+			$header = array('Sno', 'FOSS', 'Academic Center Code', 'Department', 'Organiser');
+		if(in_array('resource_person', array_values($user->roles)))
+			$header = array('Sno', 'FOSS', 'Academic Center Code', 'Department', 'Organiser', 'Action');
 		db_set_active('workshop_info');
 		$result = pager_query($query, 30, 0, $count_query);
 		db_set_active('default');
@@ -179,8 +209,12 @@
 		$sno = 1;
 		
 		while ($item = db_fetch_object($result)) {
-			$row_tmp = db_fetch_object($res1);
-			$row[] = array($sno++, $item->foss_category, $item->academic_code, $item->department, $item->organiser_name, l('Confirm', 'workshops/workshop_confirm/'. $item->id));
+			// $row_tmp = db_fetch_object($res1);
+			if(in_array('resource_person', array_values($user->roles))){
+				$row[] = array($sno++, $item->foss_category, $item->academic_code, $item->department, $item->organiser_name, l('Confirm', 'workshops/workshop_confirm/'. $item->id));
+			}else {
+				$row[] = array($sno++, $item->foss_category, $item->academic_code, $item->department, $item->organiser_name);
+			}
 		}
 		if (count($row) == 0) {
 			$output .= '<div style="color:red;text-align:center;">List is empty.</div>';
@@ -194,9 +228,39 @@
 
 	function workshops_list_workshop_approval(){
 		global $user;
-		$query = "select distinct wr.*, o.organiser_name  from workshop_requests wr, organiser o where wr.academic_code in (SELECT ac.`academic_code` FROM `academic_center` ac, resource_person rp WHERE rp.user_uid=".$user->uid." and FIND_IN_SET(ac.state_code, rp.states) > 0) and wr.status=1 and o.organiser_id=wr.organiser_id order by cfm_wkshop_date DESC";
-		$count_query = "select count(*) from workshop_requests wr, organiser o where wr.academic_code in (SELECT ac.`academic_code` FROM `academic_center` ac, resource_person rp WHERE rp.user_uid=".$user->uid." and FIND_IN_SET(ac.state_code, rp.states) > 0) and wr.status=1 and o.organiser_id=wr.organiser_id order by cfm_wkshop_date DESC";
-		$header = array('Sno', 'Workshop Code', 'FOSS', 'Academic Center Code', 'Date/Time', 'Department', 'Organiser', 'Action');
+		
+		$query = "";
+		$count_query = "";
+		
+		if(in_array('organiser', array_values($user->roles))) {
+			$query = "select wr.*, o.organiser_name from workshop_requests wr, organiser o where wr.organiser_id=".$user->uid." and wr.status=1 and wr.organiser_id=o.organiser_id";
+			$count_query = "select count(*) from workshop_requests wr, organiser o where wr.organiser_id=".$user->uid." and wr.status=1 and wr.organiser_id=o.organiser_id";
+		}
+
+		if(in_array('resource_person', array_values($user->roles))) {
+			$query = "select states from resource_person where user_uid=".$user->uid;
+			db_set_active('workshop_info');
+			$result = db_query($query);
+			db_set_active('default');
+			$row = db_fetch_object($result);
+			$state_code_arr = explode(',', $row->states);
+		
+			$tmp_query_param = "";
+			foreach($state_code_arr as $st_code){
+				if($tmp_query_param != ""){
+					$tmp_query_param .= " or ";
+				}
+				$tmp_query_param .=	"wr.academic_code like '".$st_code."%'";
+			}
+			$query = "select wr.*, o.organiser_name from workshop_requests wr, organiser o where (".$tmp_query_param.") and wr.status=1 and wr.organiser_id=o.organiser_id order by wr.cfm_wkshop_date DESC";
+			//echo $query."<br /><br />";
+			$count_query = "select count(*) from workshop_requests wr, organiser o where (".$tmp_query_param.") and wr.status=1 and wr.organiser_id=o.organiser_id";
+			//echo $count_query."<br />"; die;
+		}
+		if(in_array('organiser', array_values($user->roles)))
+			$header = array('Sno', 'Workshop Code', 'FOSS', 'Academic Center Code', 'Date/Time', 'Department', 'Organiser');
+		if(in_array('resource_person', array_values($user->roles)))
+			$header = array('Sno', 'Workshop Code', 'FOSS', 'Academic Center Code', 'Date/Time', 'Department', 'Organiser', 'Action');
 		db_set_active('workshop_info');
 		$result = pager_query($query , 30, 0, $count_query);
 		db_set_active('default');
@@ -204,7 +268,11 @@
 		$sno = 1;
 		
 		while ($item = db_fetch_object($result)) {
-			$row[] = array($sno++, $item->workshop_code, $item->foss_category, $item->academic_code, $item->cfm_wkshop_date.' / '.$item->cfm_wkshop_time, $item->department, $item->organiser_name, l('Edit', 'workshops/workshop_edit/'. $item->id));
+			if(in_array('resource_person', array_values($user->roles))){
+				$row[] = array($sno++, $item->workshop_code, $item->foss_category, $item->academic_code, $item->cfm_wkshop_date.' / '.$item->cfm_wkshop_time, $item->department, $item->organiser_name, l('Edit', 'workshops/workshop_edit/'. $item->id));
+			}else {
+				$row[] = array($sno++, $item->workshop_code, $item->foss_category, $item->academic_code, $item->cfm_wkshop_date.' / '.$item->cfm_wkshop_time, $item->department, $item->organiser_name);
+			}
 		}
 		if (count($row) == 0) {
 			$output .= '<div style="color:red;text-align:center;">List is empty.</div>';
@@ -218,8 +286,35 @@
 
 	function workshops_list_workshop_completed(){
 		global $user;
-		$query = "select wr.*, o.organiser_name  from workshop_requests wr, organiser o where wr.academic_code in (SELECT ac.`academic_code` FROM `academic_center` ac, resource_person rp WHERE rp.user_uid=".$user->uid." and FIND_IN_SET(ac.state_code, rp.states) > 0) and wr.status=2 and wr.organiser_id=o.organiser_id order by cfm_wkshop_date  DESC";
-		$count_query = "select count(*) from workshop_requests wr, organiser o where wr.academic_code in (SELECT ac.`academic_code` FROM `academic_center` ac, resource_person rp WHERE rp.user_uid=".$user->uid." and FIND_IN_SET(ac.state_code, rp.states) > 0) and wr.status=2 and wr.organiser_id=o.organiser_id order by cfm_wkshop_date  DESC";
+		
+		$query = "";
+		$count_query = "";
+		
+		if(in_array('organiser', array_values($user->roles))) {
+			$query = "select wr.*, o.organiser_name from workshop_requests wr, organiser o where wr.organiser_id=".$user->uid." and wr.status=2 and wr.organiser_id=o.organiser_id";
+			$count_query = "select count(*) from workshop_requests wr, organiser o where wr.organiser_id=".$user->uid." and wr.status=2 and wr.organiser_id=o.organiser_id";
+		}
+		
+		if(in_array('resource_person', array_values($user->roles))) {
+			$query = "select states from resource_person where user_uid=".$user->uid;
+			db_set_active('workshop_info');
+			$result = db_query($query);
+			db_set_active('default');
+			$row = db_fetch_object($result);
+			$state_code_arr = explode(',', $row->states);
+		
+			$tmp_query_param = "";
+			foreach($state_code_arr as $st_code){
+				if($tmp_query_param != ""){
+					$tmp_query_param .= " or ";
+				}
+				$tmp_query_param .=	"wr.academic_code like '".$st_code."%'";
+			}
+			$query = "select wr.* from workshop_requests wr where (".$tmp_query_param.") and wr.status=2 order by wr.cfm_wkshop_date DESC";
+			//echo $query."<br /><br />";
+			$count_query = "select count(*) from workshop_requests wr where (".$tmp_query_param.") and wr.status=2";
+			//echo $count_query."<br />"; die;
+		}
 		$header = array('Sno','Workshop Code', 'FOSS', 'Language', 'Academic Center Code', 'Department', 'Date & Time', 'Action');
 		db_set_active('workshop_info');
 		$result = pager_query($query , 30, 0, $count_query);
@@ -367,6 +462,7 @@
 			
 			// send email to Organiser
 			$query = "select name, mail from users where uid='".$_POST['oid']."'";
+			db_set_active('default');
 			$result = db_query($query);
 			$row = db_fetch_object($result);
 			$mailto = $row->mail;
@@ -492,6 +588,7 @@
 			workshops_notify($mailto, $subject, $message);
 			// send email to Organiser
 			$query = "select name, mail from users where uid='".$_POST['oid']."'";
+			db_set_active('default');
 			$result = db_query($query);
 			$row = db_fetch_object($result);
 			$mailto = $row->mail;

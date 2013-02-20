@@ -501,5 +501,46 @@ function edit_organiser_form_submit($form, &$form_state){
 	 		return "<p>Sorry, no data found.</p>";
 	 	}
 	}
-
+	
+	function workshops_list_organiser_requests(){
+		global $user;
+		global $base_url;
+		
+		$query = "select states from resource_person where user_uid=".$user->uid;
+		db_set_active('workshop_info');
+		$result = db_query($query);
+		db_set_active('default');
+		$row = db_fetch_object($result);
+		$state_code_arr = explode(',', $row->states);
+		
+		$tmp_query_param = "";
+		foreach($state_code_arr as $st_code){
+			if($tmp_query_param != ""){
+				$tmp_query_param .= " or ";
+			}
+			$tmp_query_param .=	"academic_code like '".$st_code."%'";
+		}
+		$query = "select * from organiser where (".$tmp_query_param.") and status=0 order by academic_code ASC";
+		//echo $query."<br /><br />";
+		$count_query = "select count(*) from organiser where (".$tmp_query_param.") and status=0";
+		//echo $count_query."<br />"; die;
+		
+		$header = array('', 'Academic Center Code', 'Name', 'City', 'Phone', 'Action');
+		db_set_active('workshop_info');
+		$result = pager_query($query, 30, 0, $count_query);
+		db_set_active('default');
+		$row = array();
+		$sno = 1;
+		while ($item = db_fetch_object($result)) {
+			$row[] = array($sno++, $item->academic_code, $item->organiser_name, $item->city, $item->phone, l('Accept','workshops/accept_organiser/'.$item->id).", ".l('Reject','workshops/reject_organiser/'.$item->id));
+		}
+		if (count($row) == 0) {
+			$output .= '<div style="color:red;text-align:center;">List is empty.</div>';
+		} else {
+			drupal_set_message($message);
+			$output = theme('table', $header, $row);
+			$output .= theme('pager');
+		}
+		return $output;
+	}
 ?>

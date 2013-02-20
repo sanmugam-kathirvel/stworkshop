@@ -12,27 +12,12 @@
 		$form['#prefix'] = '<div class="workshop-form">';
 		$form['#suffix'] = '</div>';
 		$form['#attributes'] = array('enctype' => "multipart/form-data");
-		$form['uid'] = array(
-	 		'#type' => 'hidden',
-	 		''
-	 	);
+		
 		$form['academic_code'] = array(
 			'#type' => 'textfield',
 			'#title' => t('Academic Center Code'),
 			'#required' => TRUE,
 			'#attributes' => array('class' => 'organiser_academic_code'),
-		);
-		$form['email'] = array(
-			'#type' => 'textfield',
-			'#title' => t('Email'),
-			'#required' => TRUE,
-			'#attributes' => array('class' => 'rp_user_email')
-		);
-		$form['user_name'] = array(
-			'#type' => 'textfield',
-			'#title' => t('User Name'),
-			'#required' => TRUE,
-			'#attributes' => array('class' => 'rp_user_name','readonly'=>'readonly')
 		);
 		$form['organiser_name'] = array(
 			'#type' => 'textfield',
@@ -75,64 +60,104 @@
 		if (!preg_match('/^[0-9\ \+]{0,15}$/', $form_state['values']['phone'])){
 			form_set_error('phone number', t('Invalid Phone number'));
 		}
-		if (!preg_match('/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/', $form_state['values']['email'])){
-			form_set_error('email', t('Invalid Email'));
-		}else{
-			$query = "select user_uid from organiser where organiser_id='".$form_state['values']['uid']."'";
+		 if ($form_state['values']['academic_code'] != ''){
+			$query = "select id from academic_center where academic_code='".$form_state['values']['academic_code']."'";
 			db_set_active('workshop_info');
 			$result = db_query($query);
 			db_set_active('default');
-			$row = db_fetch_object($result);
-			if($row){
-				form_set_error('email', t('The e-mail address '.$form_state['values']['email'].' is already registered as Organiser'));
-			}
-		}if($form_state['values']['uid'] == ''){
-			form_set_error('email', t('This email is not registered at spoken-tutorial.org, Please create your account with this email.'));
-		}
+			if(!$row = db_fetch_object($result)){
+				form_set_error('academic_code', t('Invalid Academic Center Code'));			
+			}		
+                }
+
+		
   		return;
 
 	}
 	function workshops_add_organiser_form_submit($form, &$form_state){
-		//print_r($form_state['values']);
-		$query = "insert into organiser (academic_code,organiser_name,address,city,phone,department,organiser_id) values('".$form_state['values']['academic_code']."','".$form_state['values']['organiser_name']."', '".$form_state['values']['permanemt_address']."', '".$form_state['values']['city']."', '".$form_state['values']['phone']."', '".$form_state['values']['department']."', '".$form_state['values']['uid']."')";
+		global $user;
+		
+		$query = "select * from organiser where organiser_id='".$user->uid."'";
 		db_set_active('workshop_info');
-		if(db_query($query)){
-			drupal_set_message('Organiser Details Added Successfully');
-		}else {
-			drupal_set_message('Error Adding Organiser Details');
-		}
-		db_set_active('default');
-		// get the role
-		$query = "SELECT rid FROM  `role` WHERE name =  'organiser'";
 		$result = db_query($query);
-		$role_id = db_fetch_object($result);
-		// insert into role_user
-		$query = "INSERT INTO users_roles (uid, rid) VALUES ('".$form_state['values']['uid']."', '".$role_id->rid."')";
-		
-		if(db_query($query)){
-		
-			// mail to Organiser
-			
-			//$mailfrom = variable_get('site_mail');
-			$mailto = $form_state['values']['email'];
-			$subject = 'Account notification';
-			$message = "<p>Dear ".$form_state['values']['organiser_name'].",</p><p>Thank you for registering at <a href='http://spoken-tutorial.org'>spoken-tutorial.org</a>. You are added as an organiser for this academic center ".$form_state['values']['academic_code'].".";
-			workshops_notify($mailto, $subject, $message);
-		
-			// send email to administrator
-		
-			$mailto = variable_get('site_mail');
-			//$mailfrom = $form_state['values']['email'];
-			$subject = 'Request for Organiser in spoken-tutorial.org (pending admin approval)';
-			$message = "<p>Dear Administrator,</p><p>".$form_state['values']['user_name']." registred as Organiser. Please 
-assign role as Organiser</p>";
-			//workshops_notify($mailto, $subject, $message);
-			global $base_url;
-			drupal_goto($path = $base_url, $query = NULL, $fragment = NULL, $http_response_code = 302);
-		}else {
-			drupal_set_message('Error Adding Organiser Login Details');
+		db_set_active('default');
+		if($row = db_fetch_object($result)){
+			db_set_active('default');
+			if($row->status == 0){
+				drupal_set_message('You have already sent the organiser request, your request is waiting for resource person\'s approval');
+			}else{
+				drupal_set_message('You already have an organiser permissions');
+			}
+		}else{
+			//print_r($form_state['values']);
+			$query = "insert into organiser (academic_code,organiser_name,address,city,phone,department,organiser_id,status) values('".$form_state['values']['academic_code']."','".$form_state['values']['organiser_name']."', '".$form_state['values']['permanemt_address']."', '".$form_state['values']['city']."', '".$form_state['values']['phone']."', '".$form_state['values']['department']."', '".$user->uid."', 0)";
+			db_set_active('workshop_info');
+			if(db_query($query)){
+				drupal_set_message('Organiser Details Added Successfully');
+			}else {
+				drupal_set_message('Error Adding Organiser Details');
+			}
+			db_set_active('default');
 		}
-		// echo '<br />'.$query;
-		// exit;
+	}
+	
+	function accept_organiser($id = NULL){
+		if($id){
+			//echo "id: ".$id; die;
+			$query = "select o.*, ac.institution_name from organiser o, academic_center ac where o.id=".$id." and ac.academic_code=o.academic_code";
+			//echo $query; die;
+			db_set_active('workshop_info');
+			$result = db_query($query);
+			db_set_active('default');
+			$row = db_fetch_object($result);
+			$query = "SELECT rid FROM `role` WHERE name = 'organiser'";
+			$result = db_query($query);
+			$role_id = db_fetch_object($result);
+			// insert into role_user
+			$query = "INSERT INTO users_roles (uid, rid) VALUES ('".$row->organiser_id."', '".$role_id->rid."')";	
+			db_query($query);
+			$query = "select mail from users where uid=".$row->organiser_id;
+			$result = db_query($query);
+			$organiser_email = db_fetch_object($result);
+			// change organiser status to active
+			$query = "update organiser set status=1 where id=".$id;
+			//echo $query; die;
+			db_set_active('workshop_info');
+			if(db_query($query)){
+				db_set_active('default');
+				// mail to Organiser
+				//$mailfrom = variable_get('site_mail');
+				$mailto = $organiser_email->mail;
+				$subject = 'Account notification';
+				$message = "<p>Dear ".$row->organiser_name.",</p><p>Thank you for registering at <a href='http://spoken-tutorial.org'>spoken-tutorial.org</a>. You are added as an organiser for '".$row->institution_name."'.";
+
+				//echo $message; die;
+				//echo $mailto."<br><br>".$subject."<br><br>".$message; die;
+				workshops_notify($mailto, $subject, $message);
+				global $base_url;
+				drupal_set_message('Organiser is added successfully.');
+				drupal_goto($path = $base_url.'/workshops/college/list_pending_organisers', $query = NULL, $fragment = NULL, $http_response_code = 302);
+			}
+			db_set_active('default');
+		}else{
+			drupal_set_message('Invalid request!');
+			drupal_goto($path = $base_url.'/workshops/college/list_pending_organisers', $query = NULL, $fragment = NULL, $http_response_code = 302);
+		}
+	}
+	
+	function reject_organiser($id = NULL){
+		if($id){
+			$query = "delete from organiser where id=".$id;
+			db_set_active('workshop_info');
+			if(db_query($query)){
+				db_set_active('default');
+				drupal_set_message("Organiser request has been removed from list.");
+				drupal_goto($path = $base_url.'/workshops/college/list_pending_organisers', $query = NULL, $fragment = NULL, $http_response_code = 302);
+			}
+		}else{
+			db_set_active('default');
+			drupal_set_message('Invalid request!');
+			drupal_goto($path = $base_url.'/workshops/college/list_pending_organisers', $query = NULL, $fragment = NULL, $http_response_code = 302);
+		}
 	}
 ?>

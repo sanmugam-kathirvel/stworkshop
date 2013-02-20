@@ -109,8 +109,8 @@
 		return $form;
 	}
 	function aworkshops_workshop_request_form_validate($form, &$form_state){
-		if (!preg_match('/^[a-zA-Z ]+$/', $form_state['values']['department'])){
-			form_set_error('department', t('Invalid Department'));
+		if (!preg_match('/^[a-zA-Z ] +$/', $form_state['values']['department'])){
+		//	form_set_error('department', t('Invalid Department'));
 		}
 		if($form_state['values']['pref_language'] == ""){
                         form_set_error('pref_language', t('Please select language'));

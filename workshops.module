@@ -1,23 +1,22 @@
 <?php
 
 function workshops_perm() {
-	return array('Workshop Add New College', 'Workshop Get College', 'Workshop Admin List', 'Workshop Organiser College', 'Workshop Request', 'Workshop Request List', 'Test Request', 'Test Request List', 'Test Admin List', 'Workshop Detail', 'Feedback', 'ajax request', 'Academic Center', 'Edit Organiser Details', 'Report Public View');
+	return array('Workshop Organiser Adding','Workshop Add New College', 'Workshop Get College', 'Workshop Admin List', 'Workshop Organiser College', 'Workshop Request', 'Workshop Request List', 'Test Request', 'Test Request List', 'Test Admin List', 'Workshop Detail', 'Feedback', 'ajax request', 'Academic Center', 'Edit Organiser Details', 'Report Public View');
 }
 
 function workshops_menu(){
+
 	$items = array();
-	
+
 	$items['workshops/aworkshop_request'] = array(
-		'title' => 'Workshop Request',
+		'title' => 'Live Workshop Request',
 		'description' => 'Workshop Admin List',
 		'page callback' => 'aworkshops_workshop_request',
 		'access arguments' => array('Workshop Request'),
 		'type' => MENU_NORMAL_ITEM,
 		'file' => 'aworkshop_request.inc',
 	);
-	
-	
-	
+
 	$items['workshops/report'] = array(
        'title' => 'Reports',
        'description' => 'report',
@@ -33,13 +32,13 @@ function workshops_menu(){
 		'file' => 'report.inc',
 	);
 	$items['workshops/college'] = array(
-       'title' => 'College Details',
-       'description' => 'college details',
-       'page callback' => 'drupal_get_form',
-       'page callback' => 'workshops_list_college_details',
-       'access arguments' => array('Workshop Add New College'),
-       'file' => 'add_college.inc'
-    );
+		'title' => 'College Details',
+       		'description' => 'college details',
+       		'page callback' => 'drupal_get_form',
+       		'page callback' => 'workshops_list_college_details',
+       		'access arguments' => array('Workshop Add New College'),
+       		'file' => 'add_college.inc'
+    	);
 	$items['workshops/add_resource_person'] = array(
 		'title' => 'Add New Resource Person',
 		'description' => 'Adding new resource preson\'s detail', 
@@ -81,6 +80,29 @@ function workshops_menu(){
 		'type' => MENU_LOCAL_TASK,
 		'file' => 'add_college.inc',
 	);
+	$items['workshops/college/list_pending_organisers'] = array(
+		'title' => 'Pending Organiser Requests',
+		'page callback' => 'workshops_list_organiser_requests',
+		'access arguments' => array('Workshop Add New College'),
+		'type' => MENU_LOCAL_TASK,
+		'file' => 'add_college.inc',
+	);
+	$items['workshops/accept_organiser'] = array(
+		'title' => 'Accept Organiser Details',
+		'page callback' => 'accept_organiser',
+		'access arguments' => array('Edit Organiser Details'),
+		'page arguments' => array(2),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'organiser.inc',
+	);
+	$items['workshops/reject_organiser'] = array(
+		'title' => 'Reject Organiser Details',
+		'page callback' => 'reject_organiser',
+		'access arguments' => array('Edit Organiser Details'),
+		'page arguments' => array(2),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'organiser.inc',
+	);
 	$items['workshops/edit_organiser'] = array(
 		'title' => 'Edit Organiser Details',
 		'page callback' => 'edit_organiser',
@@ -90,15 +112,7 @@ function workshops_menu(){
 		'file' => 'add_college.inc',
 	);
 	$items['workshops/view_organiser'] = array(
-		'title' => 'View Organiser Details',
-		'page callback' => 'view_organiser',
-		'access arguments' => array('View Organiser Details'),
-		'page arguments' => array(2),
-		'type' => MENU_NORMAL_ITEM,
-		'file' => 'add_college.inc',
-	);
-	$items['workshops/view_organiser'] = array(
-		'title' => 'Edit Organiser Details',
+		'title' => 'Organiser Details',
 		'page callback' => 'view_organiser',
 		'access arguments' => array('Edit Organiser Details'),
 		'page arguments' => array(2),
@@ -123,7 +137,7 @@ function workshops_menu(){
 		'title' => 'Add Organiser Details',
 		'description' => 'Adding new Organiser details',
 		'page callback' => 'workshops_add_organiser',
-		'access arguments' => array('Workshop Organiser College'),
+		'access arguments' => array('Workshop Organiser Adding'),
 		'type' => MENU_NORMAL_ITEM,
 		'file' => 'organiser.inc',
 	);
@@ -131,7 +145,7 @@ function workshops_menu(){
 		'title' => 'Add New College Details',
 		'description' => 'Adding new college details detail',
 		'page callback' => 'get_academic_details',
-		'access arguments' => array('Workshop Organiser College'),
+		'access arguments' => array('ajax request'),
 		'type' => MENU_NORMAL_ITEM,
 	);
 	$items['workshops/workshop_request'] = array(
@@ -213,6 +227,13 @@ function workshops_menu(){
 		'type' => MENU_NORMAL_ITEM,
 		'file' => 'test_request.inc',
 	);
+	$items['workshops/list_test_completed'] = array(
+		'title' => 'List Of Completed Tests',
+		'page callback' => 'workshops_list_test_completed',
+		'access arguments' => array('Test Request List'),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'test_request.inc',
+	);
 	$items['workshops/manage_tests'] = array(
 		'title' => 'List Of Approved Test Requests',
 		'page callback' => 'workshops_admin_test_approval',
@@ -230,6 +251,13 @@ function workshops_menu(){
 	$items['workshops/test_view'] = array(
 		'title' => 'Test Approval Details',
 		'page callback' => 'workshops_test_view',
+		'access arguments' => array('Test Request List'),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'test_request.inc',
+	);
+	$items['workshops/test_edit'] = array(
+		'title' => 'Edit Test Approval Details',
+		'page callback' => 'workshops_test_edit',
 		'access arguments' => array('Test Request List'),
 		'type' => MENU_NORMAL_ITEM,
 		'file' => 'test_request.inc',

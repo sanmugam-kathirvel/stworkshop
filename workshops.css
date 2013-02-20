@@ -1,3 +1,47 @@
+.academic_details .workshop-form #academic-details-form{
+	overflow: hidden;
+	margin-bottom: 5px;
+	width: 250px;
+	margin: auto;
+}
+.academic_details .workshop-form #academic-details-form .form-item{
+	float: left;
+	margin-right: 10px;
+}
+.academic_details .workshop-form #academic-details-form .form-submit{
+	float: left;
+	margin: 1em 0;
+}
+.academic_details .academic-data{
+	clear: both;
+	text-align: center;
+}
+
+
+.org-user-pass{
+	display: none;
+}
+.date-and-time{
+	overflow: hidden;
+	width: 100%;
+}
+.date-and-time label{
+	float: left;
+	width: 100%;
+}
+.date-and-time div.form-item{
+	float:left;
+	padding-right: 10px;
+}
+.skype-request{
+	overflow: hidden;
+	width: 100%;
+}
+
+.skype-request div.form-radios label{
+	float: left;
+}
+
 #feedback-form div.form-radios{
 	overflow: hidden;
 }

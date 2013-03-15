@@ -122,7 +122,7 @@ function workshops_menu(){
 	$items['workshops/college/view_college'] = array(
 		'title' => 'College Details',
 		'page callback' => 'workshops_view_college_details',
-		'access arguments' => array('Workshop Add New College'),
+		'access arguments' => array('Academic Center'),
 		'type' => MENU_NORMAL_ITEM,
 		'file' => 'add_college.inc',
 	);
@@ -482,8 +482,7 @@ function get_feedback_detail(){
 		//echo $mailfrom.$mailto.$subject.$message;
 		global $custom_email;
 		$mailfrom = $custom_email;
-		drupal_mail('workshops', 'reply', $mailto, language_default(),
-		             array('body' => $message, 'subject' => $subject), $mailfrom, TRUE);
+		//drupal_mail('workshops', 'reply', $mailto, language_default(), array('body' => $message, 'subject' => $subject), $mailfrom, TRUE);
 	}
   
 	function workshops_mail($key, &$message, $params) {

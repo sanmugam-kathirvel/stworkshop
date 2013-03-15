@@ -1,7 +1,6 @@
 <?php
 function academic_details(){
-	$output .= '<div class="academic_details">';
-	$output .= drupal_get_form('academic_details_form');
+	$output = drupal_get_form('academic_details_form');
 	$params = substr($_REQUEST['q'], strripos($_REQUEST['q'], '/'));
 	$ac = explode('=', $params);
 	if($ac[1]){
@@ -10,14 +9,14 @@ function academic_details(){
 		$query = "select * from academic_center where state_code='".$ac[1]."' order by academic_code";
 		$sql_count = "select count(*) from academic_center where state_code='".$ac[1]."' order by academic_code";
 
-		$header = array('Academic Code', 'Institution Name', 'Street', 'City');
+		$header = array('Academic Code', 'Institution Name', 'City', '');
 		db_set_active('workshop_info');
 		$result = pager_query($query, 30, 0, $sql_count);
 		db_set_active('default');
 		$row = array();
 		$count = 0;
 		while ($item = db_fetch_object($result)) {
-			$row[] = array($item->academic_code, $item->institution_name, $item->street, $item->city);
+			$row[] = array($item->academic_code, $item->institution_name, $item->city, l(t('View'), 'workshops/college/view_college/'. $item->id , array('attributes' => array('class' => 'view-record', 'title' => 'View'))));
 			$count++;
 		}
 		if($count == 0) {
@@ -29,7 +28,6 @@ function academic_details(){
 			$output .= theme('pager');
 		}
 	}
-	$output .= "</div>";
 	return $output;
 }
 
@@ -40,49 +38,48 @@ function academic_details_form($form_state) {
 	$form['#prefix'] = '<div class="workshop-form">';
 	$form['#suffix'] = '</div>';
 	$form['#attributes'] = array('enctype' => "multipart/form-data");
-
 	$form['states'] = array(
 		'#type' => 'select',
-		//'#title' => t('States'),
+		'#title' => t('States'),
 		'#required' => TRUE,
 		'#attributes' => array('id' => 'resource_person_state'),
 		'#options' => array(
-'' => 'select state',
-		'ANP' => 'Andhra Pradesh',
-		'ARP' => 'Arunachal Pradesh',
-		'ASM' => 'Assam',
-		'BHR' => 'Bihar',
-		'CTG' => 'Chattisgarh',
-		'DDU' => 'Daman/Diu',
-		'DEL' => 'Delhi',
-		'DNG' => 'Dadar/Nag',
-		'GOA' => 'Goa',
-		'GUJ' => 'Gujarat',
-		'HAR' => 'Haryana',
-		'HMP' => 'Himachal Pradesh',
-		'JNK' => 'Jammu Kashmir',
-		'JHD' => 'Jharkhand',
-		'KAR' => 'Karnataka',
-		'KER' => 'Kerala',
-		'LKD' => 'Lakshadweep',
-		'MDP' => 'Madhya Pradesh',
-		'MAH' => 'Maharastra',
-		'MAN' => 'Manipur',
-		'MEG' => 'Meghalaya',
-		'MIZ' => 'Mizoram',
-		'NAG' => 'Nagaland',
-		'ODI' => 'Orissa',
-		'PCY' => 'Pondicherry',
-		'PJB' => 'Punjab',
-		'RAJ' => 'Rajasthan',
-		'SIK' => 'Sikkim',
-		'TAM' => 'Tamil Nadu',
-		'TRP' => 'Tripura',
-		'UTK' => 'Uttarakhand',
-		'UTP' => 'Uttar Pradesh',
-		'WBN' => 'West Bengal',
-		'ANR' => 'Andaman/Nicobar',
-		'CHG' => 'Chandigarh',
+			'' => 'select state',
+			'ANP' => 'Andhra Pradesh',
+			'ANR' => 'Andaman/Nicobar',
+			'ARP' => 'Arunachal Pradesh',
+			'ASM' => 'Assam',
+			'BHR' => 'Bihar',
+			'CHG' => 'Chandigarh',
+			'CTG' => 'Chattisgarh',
+			'DDU' => 'Daman/Diu',
+			'DEL' => 'Delhi',
+			'DNG' => 'Dadar/Nag',
+			'GOA' => 'Goa',
+			'GUJ' => 'Gujarat',
+			'HAR' => 'Haryana',
+			'HMP' => 'Himachal Pradesh',
+			'JNK' => 'Jammu Kashmir',
+			'JHD' => 'Jharkhand',
+			'KAR' => 'Karnataka',
+			'KER' => 'Kerala',
+			'LKD' => 'Lakshadweep',
+			'MDP' => 'Madhya Pradesh',
+			'MAH' => 'Maharastra',
+			'MAN' => 'Manipur',
+			'MEG' => 'Meghalaya',
+			'MIZ' => 'Mizoram',
+			'NAG' => 'Nagaland',
+			'ODI' => 'Orissa',
+			'PCY' => 'Pondicherry',
+			'PJB' => 'Punjab',
+			'RAJ' => 'Rajasthan',
+			'SIK' => 'Sikkim',
+			'TAM' => 'Tamil Nadu',
+			'TRP' => 'Tripura',
+			'UTK' => 'Uttarakhand',
+			'UTP' => 'Uttar Pradesh',
+			'WBN' => 'West Bengal',
 		),
 
 	);

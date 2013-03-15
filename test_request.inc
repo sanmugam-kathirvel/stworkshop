@@ -6,8 +6,8 @@
 		return $output;
 	}
 	function workshops_test_request_form(){
-		$hour = array('' => 'Select Hour');
-		$minite = array('' => 'Select Minute');
+		$hour = array('' => 'Hour');
+		$minite = array('' => 'Minute');
 		$foss_category = array('' => 'Select FOSS Category');
 		$language_array = array('' => 'Select Language');
 		$i=0;
@@ -82,15 +82,15 @@
 		$form['pref_test_time'] = array(
 			'#type' => 'select',
 			'#required' => TRUE,
-			'#title' => t('Hour'),
+			'#title' => t(''),
 			'#options' => $hour,
 			'#attributes' => array('class' => 'pref_wkshop_time'),
-			'#prefix' => "<div class='date-and-time'><label for='edit-pref-test-time'><b>Preferred Test Time: </b></label>",
+			'#prefix' => "<div class='date-and-time'><label for='edit-pref-test-time'>Preferred Test Time:</label>",
 		);
 		$form['pref_test_minute'] = array(
 			'#type' => 'select',
 			'#required' => TRUE,
-			'#title' => t('Minute'),
+			'#title' => t(''),
 			'#options' => $minite,
 			'#attributes' => array('class' => 'pref_wkshop_minute'),
 			'#suffix' => "</div>"
@@ -190,7 +190,7 @@
 			$header = array('FOSS Category', 'Academic Center Code', 'Department', 'Preferred date & time');
 		}
 		if(in_array('resource_person', array_values($user->roles))) {
-			$header = array('FOSS Category', 'Academic Center Code', 'Department', 'Preferred date & time', 'Action');
+			$header = array('FOSS Category', 'Academic Center Code', 'Department', 'Preferred date & time', '');
 		}
 		db_set_active('workshop_info');
 		$result = pager_query($query , 30, 0, $count_query);
@@ -200,7 +200,7 @@
 		
 		while ($item = db_fetch_object($result)) {
 			if(in_array('resource_person', array_values($user->roles))) {
-				$row[] = array($item->foss_category, $item->academic_code, $item->department, $item->pref_test_date." ".$item->pref_test_time, l('Confirm', 'workshops/test_confirm/'. $item->id));
+				$row[] = array($item->foss_category, $item->academic_code, $item->department, $item->pref_test_date." ".$item->pref_test_time, l('Confirm', 'workshops/test_confirm/'. $item->id, array('attributes' => array('class' => 'confirm-record', 'title' => 'Confirm'))));
 			}else {
 				$row[] = array($item->foss_category, $item->academic_code, $item->department, $item->pref_test_date." ".$item->pref_test_time);
 			}
@@ -249,7 +249,7 @@
 			$header = array('Code', 'FOSS Category', 'Academic Code', 'Confirmed date & time');
 		}
 		if(in_array('resource_person', array_values($user->roles))) {
-			$header = array('Code', 'FOSS Category', 'Academic Code', 'Confirmed date & time', 'Action');
+			$header = array('Code', 'FOSS Category', 'Academic Code', 'Confirmed date & time', '');
 		}
 		db_set_active('workshop_info');
 		$result = pager_query($query , 30, 0, $count_query);
@@ -257,7 +257,7 @@
 		$row = array();
 		while ($item = db_fetch_object($result)) {
 			if(in_array('resource_person', array_values($user->roles))) {
-				$row[] = array($item->test_code, $item->foss_category, $item->academic_code, $item->cfm_test_date." ".$item->cfm_test_time, l('Edit', 'workshops/test_edit/'. $item->id));
+				$row[] = array($item->test_code, $item->foss_category, $item->academic_code, $item->cfm_test_date." ".$item->cfm_test_time, l('Edit', 'workshops/test_edit/'. $item->id, array('attributes' => array('class' => 'edit-record', 'title' => 'Edit'))));
 			}else {
 				$row[] = array($item->test_code, $item->foss_category, $item->academic_code, $item->cfm_test_date." ".$item->cfm_test_time);
 			}
@@ -302,14 +302,14 @@
 			//echo $query; die;
 			$count_query = "select count(*) from test_requests where (".$tmp_query_param.") and status=2 order by cfm_test_date DESC";
 		}
-		$header = array('Code', 'FOSS Category', 'Language', 'Academic Center Code', 'Department', 'Confirmed date & time', 'Action');
+		$header = array('Code', 'FOSS', 'Academic Code', 'Date & Time', '');
 		db_set_active('workshop_info');
 		$result = pager_query($query , 30, 0, $count_query);
 		db_set_active('default');
 		$row = array();
 		
 		while ($item = db_fetch_object($result)) {
-			$row[] = array($item->test_code, $item->foss_category, $item->pref_language, $item->academic_code, $item->department, $item->cfm_test_date." ".$item->cfm_test_time, l('View', 'workshops/test_view/'. $item->id));
+			$row[] = array($item->test_code, human_text($item->foss_category), $item->academic_code, $item->cfm_test_date." ".$item->cfm_test_time, l('View', 'workshops/test_view/'. $item->id, array('attributes' => array('class' => 'view-record', 'title' => 'View'))));
 		}
 		if (count($row) == 0) {
 			$output .= '<div style="color:red;text-align:center;">List is empty.</div>';
@@ -374,6 +374,8 @@
 			}
 			$i++;
 		}
+		$form['#prefix'] = '<div class="workshop-form">';
+		$form['#suffix'] = '</div>';
 		$form['#attributes'] = array('enctype' => "multipart/form-data");
 		$form['id'] = array(
 			'#type' => 'hidden',
@@ -396,7 +398,7 @@
 			'#options' => $hour,
 			'#default_value' => $time_arr[0],
 			'#attributes' => array('class' => 'pref_wkshop_time'),
-			'#prefix' => "<div class='date-and-time'><label for='edit-pref-test-time'><b>Confirm Test Time: </b><span class='form-required' title='This field is required.'>*</span></label>",
+			'#prefix' => "<div class='date-and-time'><label for='edit-pref-test-time'>Confirm Test Time:<span class='form-required' title='This field is required.'>*</span></label>",
 		);
 		$form['cfm_test_minute'] = array(
 			'#type' => 'select',
@@ -625,7 +627,7 @@
 	function workshops_admin_test_approval(){
 		global $user;
 		$query = "select * from {test_requests} where status=1 order by test_code";
-		$header = array('', 'FOSS Category', 'Language', 'Institution Name', 'Department', 'Confirmed date & time', 'Action');
+		$header = array('', 'FOSS Category', 'Academic Code',  'Date & Time', '');
 		$tablesort = tablesort_sql($header);
 		db_set_active('workshop_info');
 		$result = pager_query($query . $tablesort, 30, 0, NULL);
@@ -634,7 +636,7 @@
 		$sno = 1;
 		
 		while ($item = db_fetch_object($result)) {
-			$row[] = array($sno++, $item->foss_category, $item->pref_language, $item->academic_code, $item->department, $item->cfm_test_date." ".$item->cfm_test_time, l('View', 'workshops/test_view/'. $item->id));
+			$row[] = array($sno++, human_text($item->foss_category), $item->academic_code, $item->cfm_test_date." ".$item->cfm_test_time, l('View', 'workshops/test_view/'. $item->id, array('attributes' => array('class' => 'view-record', 'title' => 'View'))));
 		}
 		if (count($row) == 0) {
 			$output .= '<div style="color:red;text-align:center;">List is empty.</div>';

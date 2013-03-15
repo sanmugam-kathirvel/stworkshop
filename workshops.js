@@ -1,6 +1,6 @@
 $(document).ready(function(){
- webroot = 'http://'+location.hostname+'/tester/workshops/';
- loading_image = "<img src='http://"+location.hostname+"/tester/ajax-loader.gif' />";
+ webroot = 'http://'+location.hostname+'/workshops/';
+ loading_image = "<img src='http://"+location.hostname+"/ajax-loader.gif' />";
 	$('.college_state').change(function(){
 		if($('.college_state').val() != ''){
 			$.ajax({

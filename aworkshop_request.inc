@@ -73,7 +73,7 @@
 			'#required' => TRUE,
 			'#options' => $hour,
 			'#attributes' => array('class' => 'pref_wkshop_time'),
-			'#prefix' => "<div class='date-and-time'><label for='edit-pref-wkshop-time'><b>Preferred Workshop Time: </b><span class='form-required' title='This field is required.'>*</span></label>",
+			'#prefix' => "<div class='date-and-time'><label for='edit-pref-wkshop-time'>Preferred Workshop Time:<span class='form-required' title='This field is required.'>*</span></label>",
 		);
 		$form['pref_wkshop_minute'] = array(
 			'#type' => 'select',

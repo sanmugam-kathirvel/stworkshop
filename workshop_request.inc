@@ -47,7 +47,7 @@
 
 
 		$form['#prefix'] = '<div class="workshop-form">';
-		$form['#suffix'] = '</div>';		
+		$form['#suffix'] = '</div>';
 		$form['#attributes'] = array('enctype' => "multipart/form-data");
 
 		$form['academic_code'] = array(
@@ -73,7 +73,7 @@
 			'#required' => TRUE,
 			'#options' => $hour,
 			'#attributes' => array('class' => 'pref_wkshop_time'),
-			'#prefix' => "<div class='date-and-time'><label for='edit-pref-wkshop-time'><b>Preferred Workshop Time: </b><span class='form-required' title='This field is required.'>*</span></label>",
+			'#prefix' => "<div class='date-and-time'><label for='edit-pref-wkshop-time'>Preferred Workshop Time: <span class='form-required' title='This field is required.'>*</span></label>",
 		);
 		$form['pref_wkshop_minute'] = array(
 			'#type' => 'select',
@@ -135,6 +135,8 @@
 		$query = "insert into  workshop_requests(academic_code, organiser_id, department, pref_wkshop_date, pref_wkshop_time, foss_category, pref_language, skype_request) values('".$form_state['values']['academic_code']."', '".$user->uid."', '".$form_state['values']['department']."', '".$pref_wkshop_date."', '".$pref_wkshop_time."', '".$form_state['values']['foss_category']."', '".$form_state['values']['pref_language']."','".$form_state['values']['skype_request']."'".")";
 		db_set_active('workshop_info');
 		if(db_query($query)){
+			db_set_active('default');
+			//var_dump("tester"); die;
 			// mail to Organiser
 			//$mailfrom = $custom_email;
 			$mailto = $user->mail;
@@ -159,7 +161,7 @@
 			$message = "<p>Dear Resource-person,</p><p>".$user->name." made a new workshop request.</p><p><b>Workshop Details</b></p><p>Foss category : ".$form_state['values']['foss_category']."</p><p>Preferred Workshop Date : ".$form_state['values']['pref_wkshop_date']."</p><p>Preferred Workshop Time : ".$pref_wkshop_time."</p>";
 			workshops_notify($mailto, $subject, $message);
 			drupal_set_message('Workshop Request Details Added Successfully');
-			drupal_goto($path = $base_url, $query = NULL, $fragment = NULL, $http_response_code = 302);
+			drupal_goto($path = 'workshops/list_workshop_request', $query = NULL, $fragment = NULL, $http_response_code = 302);
 		}else {
 			drupal_set_message('Error Adding Workshop Request Details');
 		}
@@ -199,9 +201,9 @@
 		//echo $count_query."<br />"; die;
 		}
 		if(in_array('organiser', array_values($user->roles)))
-			$header = array('Sno', 'FOSS', 'Academic Center Code', 'Department', 'Organiser');
+			$header = array('Sno', 'FOSS', 'Academic Code', 'Department', 'Organiser');
 		if(in_array('resource_person', array_values($user->roles)))
-			$header = array('Sno', 'FOSS', 'Academic Center Code', 'Department', 'Organiser', 'Action');
+			$header = array('Sno', 'FOSS', 'Academic Code', 'Department', 'Organiser', '');
 		db_set_active('workshop_info');
 		$result = pager_query($query, 30, 0, $count_query);
 		db_set_active('default');
@@ -211,9 +213,9 @@
 		while ($item = db_fetch_object($result)) {
 			// $row_tmp = db_fetch_object($res1);
 			if(in_array('resource_person', array_values($user->roles))){
-				$row[] = array($sno++, $item->foss_category, $item->academic_code, $item->department, $item->organiser_name, l('Confirm', 'workshops/workshop_confirm/'. $item->id));
+				$row[] = array($sno++, human_text($item->foss_category), $item->academic_code, $item->department, $item->organiser_name, l(t('Confirm'), 'workshops/workshop_confirm/'. $item->id, array('attributes' => array('class' => 'confirm-record', 'title' => 'Confirm'))));
 			}else {
-				$row[] = array($sno++, $item->foss_category, $item->academic_code, $item->department, $item->organiser_name);
+				$row[] = array($sno++, human_text($item->foss_category), $item->academic_code, $item->department, $item->organiser_name);
 			}
 		}
 		if (count($row) == 0) {
@@ -258,9 +260,9 @@
 			//echo $count_query."<br />"; die;
 		}
 		if(in_array('organiser', array_values($user->roles)))
-			$header = array('Sno', 'Workshop Code', 'FOSS', 'Academic Center Code', 'Date/Time', 'Department', 'Organiser');
+			$header = array('Code', 'FOSS', 'Academic Code', 'Date/Time', 'Department', 'Organiser');
 		if(in_array('resource_person', array_values($user->roles)))
-			$header = array('Sno', 'Workshop Code', 'FOSS', 'Academic Center Code', 'Date/Time', 'Department', 'Organiser', 'Action');
+			$header = array('Workshop Code', 'FOSS', 'Academic Code', 'Date & Time', 'Department', 'Organiser', '');
 		db_set_active('workshop_info');
 		$result = pager_query($query , 30, 0, $count_query);
 		db_set_active('default');
@@ -269,9 +271,9 @@
 		
 		while ($item = db_fetch_object($result)) {
 			if(in_array('resource_person', array_values($user->roles))){
-				$row[] = array($sno++, $item->workshop_code, $item->foss_category, $item->academic_code, $item->cfm_wkshop_date.' / '.$item->cfm_wkshop_time, $item->department, $item->organiser_name, l('Edit', 'workshops/workshop_edit/'. $item->id));
+				$row[] = array($item->workshop_code, human_text($item->foss_category), $item->academic_code, $item->cfm_wkshop_date.' '.$item->cfm_wkshop_time, $item->department, $item->organiser_name, l('Edit', 'workshops/workshop_edit/'. $item->id, array('attributes' => array('class' => 'edit-record', 'title' => 'Edit'))));
 			}else {
-				$row[] = array($sno++, $item->workshop_code, $item->foss_category, $item->academic_code, $item->cfm_wkshop_date.' / '.$item->cfm_wkshop_time, $item->department, $item->organiser_name);
+				$row[] = array($item->workshop_code, human_text($item->foss_category), $item->academic_code, $item->cfm_wkshop_date.' '.$item->cfm_wkshop_time, $item->department, $item->organiser_name);
 			}
 		}
 		if (count($row) == 0) {
@@ -315,7 +317,7 @@
 			$count_query = "select count(*) from workshop_requests wr where (".$tmp_query_param.") and wr.status=2";
 			//echo $count_query."<br />"; die;
 		}
-		$header = array('Sno','Workshop Code', 'FOSS', 'Language', 'Academic Center Code', 'Department', 'Date & Time', 'Action');
+		$header = array('Sno','Workshop Code', 'FOSS', 'Language', 'Academic Code', 'Date & Time', '');
 		db_set_active('workshop_info');
 		$result = pager_query($query , 30, 0, $count_query);
 		db_set_active('default');
@@ -323,7 +325,7 @@
 		$sno = 1;
 		
 		while ($item = db_fetch_object($result)) {
-			$row[] = array($sno++, $item->workshop_code, $item->foss_category, $item->pref_language, $item->academic_code, $item->department, $item->cfm_wkshop_date." ".$item->cfm_wkshop_time, l('View', 'workshops/view_workshop/'. $item->id));
+			$row[] = array($sno++, $item->workshop_code, human_text($item->foss_category), $item->pref_language, $item->academic_code, $item->cfm_wkshop_date." ".$item->cfm_wkshop_time, l('View', 'workshops/view_workshop/'. $item->id, array('attributes' => array('class' => 'view-record', 'title' => 'View'))));
 		}
 		if (count($row) == 0) {
 			$output .= '<div style="color:red;text-align:center;">List is empty.</div>';
@@ -390,6 +392,8 @@
 			}
 			$i++;
 		}
+		$form['#prefix'] = '<div class="workshop-form">';
+		$form['#suffix'] = '</div>';
 		$form['#attributes'] = array('enctype' => "multipart/form-data");
 		$form['id'] = array(
 			'#type' => 'hidden',
@@ -416,7 +420,7 @@
 			'#options' => $hour,
 			'#default_value' => $time_arr[0],
 			'#attributes' => array('class' => 'pref_wkshop_time'),
-			'#prefix' => "<div class='date-and-time'><label for='edit-pref-wkshop-time'><b>Confirm Workshop Time: </b><span class='form-required' title='This field is required.'>*</span></label>",
+			'#prefix' => "<div class='date-and-time'><label for='edit-pref-wkshop-time'>Confirm Workshop Time:<span class='form-required' title='This field is required.'>*</span></label>",
 		);
 		$form['cfm_wkshop_minute'] = array(
 			'#type' => 'select',
@@ -529,6 +533,8 @@
 			}
 			$i++;
 		}
+		$form['#prefix'] = '<div class="workshop-form">';
+		$form['#suffix'] = '</div>';
 		$form['#attributes'] = array('enctype' => "multipart/form-data");
 		$form['id'] = array(
 			'#type' => 'hidden',
@@ -554,7 +560,7 @@
 			'#options' => $hour,
 			'#default_value' => $time_arr[0],
 			'#attributes' => array('class' => 'pref_wkshop_time'),
-			'#prefix' => "<div class='date-and-time'><label for='edit-pref-wkshop-time'><b>Confirm Workshop Time: </b><span class='form-required' title='This field is required.'>*</span></label>",
+			'#prefix' => "<div class='date-and-time'><label for='edit-pref-wkshop-time'>Confirm Workshop Time:<span class='form-required' title='This field is required.'>*</span></label>",
 		);
 		$form['cfm_wkshop_minute'] = array(
 			'#type' => 'select',

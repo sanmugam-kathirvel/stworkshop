@@ -8,7 +8,7 @@
 	function test_detail_form(){
 		$path = drupal_get_path('module', 'workshops');
 		drupal_add_js($path . '/workshops.js', 'module');
-		$form['#prefix'] = '<div class="test-form">';
+		$form['#prefix'] = '<div class="workshop-form">';
 		$form['#suffix'] = '</div>';
 		$form['#attributes'] = array('enctype' => "multipart/form-data");
 

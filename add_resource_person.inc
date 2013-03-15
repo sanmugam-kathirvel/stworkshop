@@ -48,7 +48,6 @@ function workshops_add_resource_person_form($form_state) {
 		'#required' => TRUE,
 		'#attributes' => array('id' => 'resource_person_state'),
 		'#options' => array(
-		'' => 'select state',
 		'ANP' => 'Andhra Pradesh',
 		'ARP' => 'Arunachal Pradesh',
 		'ASM' => 'Assam',

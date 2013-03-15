@@ -1,4 +1,0 @@
-stworkshop
-==========
-
-Manage workshops

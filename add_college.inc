@@ -113,7 +113,7 @@ function workshops_add_college_form($form_state) {
 	
 	$form['resource_person'] = array(
 		'#type' => 'textfield',
-		'#title' => t('Resource Person'),
+		'#title' => t('Resource Person ID'),
 		'#size' => 30,
 		'#maxlength' => 50,
 		'#required' => TRUE,
@@ -164,7 +164,7 @@ function workshops_list_college_details(){
 	$sno = 1;
 	
 	while ($item = db_fetch_object($result)) {
-		$row[] = array($sno++, $item-> state_code, $item->academic_code, $item->institution_name, $item->city, l('View', 'workshops/college/view_college/'. $item->id).", ".l('Edit', 'workshops/college/edit_college/'. $item->id));
+		$row[] = array($sno++, $item-> state_code, $item->academic_code, $item->institution_name, $item->city, l(t('Edit'), 'workshops/college/edit_college/'. $item->id , array('attributes' => array('class' => 'edit-record', 'title' => 'Edit')))." ".l(t('View'), 'workshops/college/view_college/'. $item->id , array('attributes' => array('class' => 'view-record', 'title' => 'View'))));
 	}
 	if (count($row) == 0) {
 		$output .= '<div style="color:red;text-align:center;">List is empty.</div>';
@@ -189,7 +189,7 @@ function workshops_list_organisers_detail(){
 	$row = array();
 	$sno = 1;
 	while ($item = db_fetch_object($result)) {
-		$row[] = array($sno++, $item->academic_code, $item->organiser_name, $item->department, $item->city, $item->phone, l('Edit','workshops/edit_organiser/'.$item->id).",".l('View','workshops/view_organiser/'.$item->id));
+		$row[] = array($sno++, $item->academic_code, $item->organiser_name, $item->department, $item->city, $item->phone, l(t('Edit'), 'workshops/edit_organiser/'. $item->id , array('attributes' => array('class' => 'edit-record', 'title' => 'Edit')))." ".l(t('View'), 'workshops/view_organiser/'. $item->id , array('attributes' => array('class' => 'view-record', 'title' => 'View'))));
 	}
 	if (count($row) == 0) {
 		$output .= '<div style="color:red;text-align:center;">List is empty.</div>';
@@ -474,20 +474,23 @@ function edit_organiser_form_submit($form, &$form_state){
 }
 	function view_organiser($id = NULL){
 		if($id){
-	 		$query = "select * from {organiser} where id=".$id;
+	 		$query = "select academic_code, organiser_name, address, city, phone, department, organiser_id from {organiser} where id=".$id;
 	 		db_set_active('workshop_info');
 	 		$result = db_query($query);
 	 		db_set_active('default');
 
 	 		if($result){
 	 			$item = db_fetch_object($result);
+	 			$query = "select mail from users where uid=".$item->organiser_id;
+				$res = db_query($query);
+				$value = db_fetch_object($res);
 	 			$output = '<table width="100%" cellpadding="6">';
 	 			$output .= '<tr><td><b>Academic Center Code</b></td><td><b>'.$item->academic_code.'</b></td></tr>';
 	 			$output .= '<tr><td><b>Organiser Name</b></td><td><b>'.$item->organiser_name.'</b></td></tr>';
 	 			$output .= '<tr><td><b>Address</b></td><td><b>'.$item->address.'</b></td></tr>';
 	 			$output .= '<tr><td><b>City</b></td><td><b>'.$item->city.'</b></td></tr>';
 	 			$output .= '<tr><td><b>Phone</b></td><td><b>'.$item->phone.'</b></td></tr>';
-	 			//$output .= '<tr><td><b>Email</b></td><td><b>'.$item->email.'</b></td></tr>';
+	 			$output .= '<tr><td><b>Email</b></td><td><b>'.$value->mail.'</b></td></tr>';
 	 			$output .= '<tr><td><b>Department</b></td><td><b>'.$item->department.'</b></td></tr>';
 	 			
 	 			$output .= '<tr><td colspan="2"><hr /></td></tr>';
@@ -532,7 +535,7 @@ function edit_organiser_form_submit($form, &$form_state){
 		$row = array();
 		$sno = 1;
 		while ($item = db_fetch_object($result)) {
-			$row[] = array($sno++, $item->academic_code, $item->organiser_name, $item->city, $item->phone, l('Accept','workshops/accept_organiser/'.$item->id).", ".l('Reject','workshops/reject_organiser/'.$item->id));
+			$row[] = array($sno++, $item->academic_code, $item->organiser_name, $item->city, $item->phone, l(t('Edit'), 'workshops/accept_organiser/'. $item->id , array('attributes' => array('class' => 'confirm-record', 'title' => 'Accept')))." ".l(t('View'), 'workshops/reject_organiser/'. $item->id , array('attributes' => array('class' => 'delete-record', 'title' => 'Reject'))));
 		}
 		if (count($row) == 0) {
 			$output .= '<div style="color:red;text-align:center;">List is empty.</div>';

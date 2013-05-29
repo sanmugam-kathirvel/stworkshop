@@ -1,5 +1,5 @@
 <?php
-
+require_once('common.inc');
 function workshops_add_resource_person_form($form_state) {
 
 	$path = drupal_get_path('module', 'workshops');
@@ -31,7 +31,7 @@ function workshops_add_resource_person_form($form_state) {
 		'#type' => 'textfield',
 		'#title' => t('User Name'),
 		'#size' => 30,
-		'#maxlength' => 15,
+		'#maxlength' => 20,
 		'#attributes' => array('class' => 'rp_user_name', 'readonly' => 'readonly'),
 	);
 	$form['phone'] = array(
@@ -44,46 +44,12 @@ function workshops_add_resource_person_form($form_state) {
 	$form['states'] = array(
 		'#type' => 'select',
 		'#multiple' => TRUE,
-		'#title' => t('States (Press ctrl and click to select multiple states)'),
+		'#title' => t('States<br />(Press ctrl & click to select multiple states)'),
 		'#required' => TRUE,
 		'#attributes' => array('id' => 'resource_person_state'),
-		'#options' => array(
-		'ANP' => 'Andhra Pradesh',
-		'ARP' => 'Arunachal Pradesh',
-		'ASM' => 'Assam',
-		'BHR' => 'Bihar',
-		'CTG' => 'Chattisgarh',
-		'DDU' => 'Daman/Diu',
-		'DEL' => 'Delhi',
-		'DNG' => 'Dadar/Nag',
-		'GOA' => 'Goa',
-		'GUJ' => 'Gujarat',
-		'HAR' => 'Haryana',
-		'HMP' => 'Himachal Pradesh',
-		'JNK' => 'Jammu Kashmir',
-		'JHD' => 'Jharkhand',
-		'KAR' => 'Karnataka',
-		'KER' => 'Kerala',
-		'LKD' => 'Lakshadweep',
-		'MDP' => 'Madhya Pradesh',
-		'MAH' => 'Maharastra',
-		'MAN' => 'Manipur',
-		'MEG' => 'Meghalaya',
-		'MIZ' => 'Mizoram',
-		'NAG' => 'Nagaland',
-		'ODI' => 'Orissa',
-		'PCY' => 'Pondicherry',
-		'PJB' => 'Punjab',
-		'RAJ' => 'Rajasthan',
-		'SIK' => 'Sikkim',
-		'TAM' => 'Tamil Nadu',
-		'TRP' => 'Tripura',
-		'UTK' => 'Uttarakhand',
-		'UTP' => 'Uttar Pradesh',
-		'WBN' => 'West Bengal',
-		'ANR' => 'Andaman/Nicobar',
-		'CHG' => 'Chandigarh',
-		),
+		'#options' => get_states(0),
+		'#prefix' => '<div class="rp-states">',
+		'#suffix' => '<div id="rp-sel-states" class="form-item"><label><h1 class="title">Selected States:</h1></label></div></div>'
 	);
 
 	$form['submit'] = array(
@@ -122,7 +88,7 @@ function workshops_add_resource_person_form_submit($form, &$form_state){
 			$selected_states .= ",";
 		$selected_states .= $sel_state;
 	}
-	$query = "insert into resource_person (user_uid,rp_fname,phone,states) values('".$form_state['values']['uid']."', '".$form_state['values']['username']."', '".$form_state['values']['phone']."', '".$selected_states."')";
+	$query = "insert into resource_person (user_uid,rp_fname,phone,states) values('".$form_state['values']['uid']."', '".trim($form_state['values']['rp_fname'])."', '".trim($form_state['values']['phone'])."', '".$selected_states."')";
 	db_set_active('workshop_info');
 	if(db_query($query)){
 		db_set_active('default');

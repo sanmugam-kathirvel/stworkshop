@@ -1,40 +1,18 @@
 <?php
+	function get_states($empty){
+		$query = "select code, name from states order by name ASC";
 
-	$states_array = array(
-'' => 'select state',
-		'ANP' => 'Andhra Pradesh',
-		'ARP' => 'Arunachal Pradesh',
-		'ASM' => 'Assam',
-		'BHR' => 'Bihar',
-		'CTG' => 'Chattisgarh',
-		'DDU' => 'Daman/Diu',
-		'DEL' => 'Delhi',
-		'DNG' => 'Dadar/Nag',
-		'GOA' => 'Goa',
-		'GUJ' => 'Gujarat',
-		'HAR' => 'Haryana',
-		'HMP' => 'Himachal Pradesh',
-		'JNK' => 'Jammu Kashmir',
-		'JHD' => 'Jharkhand',
-		'KAR' => 'Karnataka',
-		'KER' => 'Kerala',
-		'LKD' => 'Lakshadweep',
-		'MDP' => 'Madhya Pradesh',
-		'MAH' => 'Maharastra',
-		'MAN' => 'Manipur',
-		'MEG' => 'Meghalaya',
-		'MIZ' => 'Mizoram',
-		'NAG' => 'Nagaland',
-		'ODI' => 'Orissa',
-		'PCY' => 'Pondicherry',
-		'PJB' => 'Punjab',
-		'RAJ' => 'Rajasthan',
-		'SIK' => 'Sikkim',
-		'TAM' => 'Tamil Nadu',
-		'TRP' => 'Tripura',
-		'UTK' => 'Uttarakhand',
-		'UTP' => 'Uttar Pradesh',
-		'WBN' => 'West Bengal',
-		'ANR' => 'Andaman/Nicobar',
-		'CHG' => 'Chandigarh',
-	);
+		db_set_active('workshop_info');
+		$result = db_query($query);
+		db_set_active('default');
+
+		$states_array = array();
+		if($empty){
+			$states_array[''] = "-- select --";
+		}
+		while($row = db_fetch_object($result)){
+			$states_array[$row->code] = $row->name;
+		}
+		return $states_array;
+	}
+?>

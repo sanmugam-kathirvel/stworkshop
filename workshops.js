@@ -1,6 +1,6 @@
 $(document).ready(function(){
- webroot = 'http://'+location.hostname+'/workshops/';
- loading_image = "<img src='http://"+location.hostname+"/ajax-loader.gif' />";
+ webroot = 'http://'+location.hostname+'/spoken_tutorial_org/workshops/';
+ loading_image = "<img src='http://"+location.hostname+"/spoken_tutorial_org/ajax-loader.gif' />";
 	$('.college_state').change(function(){
 		if($('.college_state').val() != ''){
 			$.ajax({
@@ -9,13 +9,18 @@ $(document).ready(function(){
 				data : {
 					'state_code' : $('.college_state').val() 
 				},
+				beforeSend: function() {
+					field_data = $('.coll_academic_code_div').html();
+					$('.coll_academic_code_div').html(loading_image);
+				},
 				success : function(data){
 					//console.log(data);
+					$('.coll_academic_code_div').html(field_data);
 					output = JSON.parse(data);
-					console.log(output);
 					var ac_code_str = '';
-					if(output.ac_count){
-						var aCode = parseInt(output.ac_count);
+					if((output.length == 2) && output[1]){
+						var tmp = output[1].replace(/^0+(?!\.|$)/, '');
+						var aCode = parseInt(tmp);
 						aCode += 1;
 						if (aCode < 10)
 							ac_code_str = '0000' + aCode;
@@ -29,7 +34,7 @@ $(document).ready(function(){
 						console.log(ac_code_str);
 						$('.college_academic_code').val(ac_code_str);
 					}else{
-						alert('Error fetching academic code, please refresh the page and try again');							
+						alert('Error fetching academic code, please refresh the page and try again');
 					}
 				}
 			});
@@ -38,20 +43,24 @@ $(document).ready(function(){
 		}
 	});
 // resurce preson
-	$('#resource_person_state').click(function(){
-		var selected_states = "";
+	$('#resource_person_state').change(function(){
+		// var selected_states = "";
+		var selected_states_html = "";
 		var selObj = document.getElementById('resource_person_state');
 		var i;
 		for (i = 0; i < selObj.options.length; i++) {
 			if (selObj.options[i].selected) {
-				if(selected_states != ""){
-					selected_states += "-";
+				if(selected_states_html != ""){
+					// selected_states += "-";
+					selected_states_html += "<br />";
 				}
-				selected_states += selObj.options[i].text;
+				// selected_states += selObj.options[i].text;
+				selected_states_html += selObj.options[i].text;
 			}
 		}
-		console.log(selected_states);
-		console.log($(this).val());
+		// console.log(selected_states_html);
+		// console.log($(this).val());
+		$('#rp-sel-states').html("<label><h1 class='title'>Selected States:</h1></label><div style='float: left;'>"+selected_states_html+"</div>");
 	});
 	$('.organiser_academic_code').change(function(){
 		
@@ -242,5 +251,79 @@ $(document).ready(function(){
 				}
 			}
 		});
+	});
+	
+	$('.add_reqs_state').change(function(){
+		var state_code = $('.add_reqs_state').val();
+		var html_data = '<option value>-- select --</option>';
+		$('.reqs_department').html(html_data);
+		if(state_code != '') {
+			$.ajax({
+				type : 'POST',
+				url : webroot + "get_org_institutions",
+				data : {
+					'state_code' : state_code
+				},
+				beforeSend: function() {
+					field_data = $('.reqs_academic_code_div').html();
+					$('.reqs_academic_code_div').html(loading_image);
+				},
+				success : function(data){
+					$('.reqs_academic_code_div').html(field_data);
+					output = JSON.parse(data);
+					if(output != 0){
+						var i = 0;
+						for(i = 0; i < output.length; i++){
+							html_data += '<option value="' + output[i].academic_code + '">' + output[i].institution_name + ", " + output[i].city + ", " + output[i].pincode + '</option>';
+						}
+						//console.log(html_data);
+						$('.add_reqs_academic_code').html(html_data);
+					}else{
+						$('.add_reqs_academic_code').html(html_data);
+					}
+					
+					// departments
+					$('.add_reqs_academic_code').change(function(){
+						var academic_code = $('.add_reqs_academic_code').val();
+						var html_data = '<option value>-- select --</option>';
+
+						if(academic_code != '') {
+							$.ajax({
+								type : 'POST',
+								url : webroot + "get_reqs_invigilator",
+								data : {
+									'academic_code' : academic_code
+								},
+								beforeSend: function() {
+									field_data = $('.add_reqs_invigilator_div').html();
+									$('.add_reqs_invigilator_div').html(loading_image);
+								},
+								success : function(data){
+									$('.add_reqs_invigilator_div').html(field_data);
+									output = JSON.parse(data);
+									if(output != 0){
+										var i = 0;
+										for(i = 0; i < output.length; i++){
+											html_data += '<option value="' + output[i].invigilator_id + '">' + output[i].invigilator_name + '</option>';
+										}
+										$('.add_invigilator_sel').html(html_data);
+									}
+								}
+							});
+						}
+					});
+				}
+			});
+		}else{
+			$('.add_reqs_academic_code').html(html_data);
+		}
+	});
+	// to select all 
+	$('.select-all').attr('checked', false);
+	$('.select-all').click(function (event) {
+		var selected = this.checked;
+		// Iterate each checkbox
+		$(':checkbox').each(function () {    this.checked = selected; });
+
 	});
 });

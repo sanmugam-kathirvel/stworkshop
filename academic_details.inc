@@ -1,4 +1,5 @@
 <?php
+require_once('common.inc');
 function academic_details(){
 	$output = drupal_get_form('academic_details_form');
 	$params = substr($_REQUEST['q'], strripos($_REQUEST['q'], '/'));
@@ -6,10 +7,17 @@ function academic_details(){
 	if($ac[1]){
 
 		db_set_active('workshop_info');
-		$query = "select * from academic_center where state_code='".$ac[1]."' order by academic_code";
-		$sql_count = "select count(*) from academic_center where state_code='".$ac[1]."' order by academic_code";
+		$query = "select id, academic_code, institution_name, city from academic_center where state_code='".$ac[1]."'";
+		$sql_count = "select count(id) from academic_center where state_code='".$ac[1]."'";
 
-		$header = array('Academic Code', 'Institution Name', 'City', '');
+		// $header = array('Academic Code', 'Institution Name', 'City', '');
+		$header = array(
+			array('data'=>'Academic Code', 'field'=>'academic_code','sort'=>'asc'), // Name column will be sort by default
+			array('data'=>'Institution', 'field'=>'institution_name'),
+			array('data'=>'City', 'field'=>'city'),
+			array('data'=>'')
+		);
+		$query .= tablesort_sql($header);
 		db_set_active('workshop_info');
 		$result = pager_query($query, 30, 0, $sql_count);
 		db_set_active('default');
@@ -24,8 +32,8 @@ function academic_details(){
 				$output .= "<p>There is no College for this State     </p>";
 			$output .= "</div>";
 		}else{
-			$output .= theme('table', $header, $row);
-			$output .= theme('pager');
+			$output .= theme_table($header,$row);
+			$output .= theme_pager(null, 30);
 		}
 	}
 	return $output;
@@ -40,47 +48,10 @@ function academic_details_form($form_state) {
 	$form['#attributes'] = array('enctype' => "multipart/form-data");
 	$form['states'] = array(
 		'#type' => 'select',
-		'#title' => t('States'),
+		'#title' => t('State'),
 		'#required' => TRUE,
 		'#attributes' => array('id' => 'resource_person_state'),
-		'#options' => array(
-			'' => 'select state',
-			'ANP' => 'Andhra Pradesh',
-			'ANR' => 'Andaman/Nicobar',
-			'ARP' => 'Arunachal Pradesh',
-			'ASM' => 'Assam',
-			'BHR' => 'Bihar',
-			'CHG' => 'Chandigarh',
-			'CTG' => 'Chattisgarh',
-			'DDU' => 'Daman/Diu',
-			'DEL' => 'Delhi',
-			'DNG' => 'Dadar/Nag',
-			'GOA' => 'Goa',
-			'GUJ' => 'Gujarat',
-			'HAR' => 'Haryana',
-			'HMP' => 'Himachal Pradesh',
-			'JNK' => 'Jammu Kashmir',
-			'JHD' => 'Jharkhand',
-			'KAR' => 'Karnataka',
-			'KER' => 'Kerala',
-			'LKD' => 'Lakshadweep',
-			'MDP' => 'Madhya Pradesh',
-			'MAH' => 'Maharastra',
-			'MAN' => 'Manipur',
-			'MEG' => 'Meghalaya',
-			'MIZ' => 'Mizoram',
-			'NAG' => 'Nagaland',
-			'ODI' => 'Orissa',
-			'PCY' => 'Pondicherry',
-			'PJB' => 'Punjab',
-			'RAJ' => 'Rajasthan',
-			'SIK' => 'Sikkim',
-			'TAM' => 'Tamil Nadu',
-			'TRP' => 'Tripura',
-			'UTK' => 'Uttarakhand',
-			'UTP' => 'Uttar Pradesh',
-			'WBN' => 'West Bengal',
-		),
+		'#options' => get_states(1),
 
 	);
 	$form['submit'] = array(

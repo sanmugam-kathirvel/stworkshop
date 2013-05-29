@@ -37,7 +37,7 @@
 			form_set_error('no_of_participants', t('Invalid participants count'));
 		}
 		if ($form_state['values']['workshop_code'] != ''){
-			$query = "select * from workshop_requests where workshop_code='".$form_state['values']['workshop_code']."'";
+			$query = "select id from workshop_requests where workshop_code='".$form_state['values']['workshop_code']."'";
 			db_set_active('workshop_info');
 			$result = db_query($query);
 			db_set_active('default');
@@ -53,12 +53,15 @@
 	}
 	function workshop_detail_form_submit($form, &$form_state){
 
-		$query = "update workshop_requests set status=2 where workshop_code='".$form_state['values']['workshop_code']."'";
+		$query = "update workshop_requests set status=2 where workshop_code='".trim(strtoupper($form_state['values']['workshop_code']))."'";
 		db_set_active('workshop_info');
 		db_query($query);
 		$query = "insert into  workshop_details values('', '".$form_state['values']['workshop_code']."', '".$form_state['values']['no_of_participants']."')";
-
+		
 		if(db_query($query)){
+		
+			db_set_active('default');
+		
 			// mail to Organiser
 			/*$query = "select email, organiser_name from organiser left join workshop_requests on organiser.username = workshop_requests.organiser_id where workshop_requests.workshop_code='".$form_state['values']['workshop_code']."'";
 			
@@ -73,12 +76,15 @@
 			
 			$message = "<p>Dear ".$row->organiser_name.",</p><p>Workshop ".$form_state['values']['workshop_code']." details has been updated. The details are </p><p>No of Participants : ".$form_state['values']['no_of_participants']."</p><p>Name of Invigilator : ".$form_state['values']['name_of_invigilator']."</p>";
 			workshops_notify($mailto, $subject, $message); */
-						
+			
 			drupal_set_message('Workshop Details Added Successfully');
+			drupal_set_message('<p>Take the assessment test within 4 weeks of the Workshop. Exceptions in special cases can be considered.</p>');
+			drupal_set_message('<p>For instructions how to request the test <a href="http://process.spoken-tutorial.org/images/a/aa/Test_Request.pdf" style="font-size: 16px;"><b><i>Click Here</i></b></a></p>');
+			drupal_set_message('<p>Inform the Invigilator to create an account before making Test Request</p>');
 			drupal_goto($path = 'workshops/workshop_detail', $query = NULL, $fragment = NULL, $http_response_code = 302);
 		}else {
+			db_set_active('default');
 			drupal_set_message('Error Adding Workshop Details');
 		}
-		
 	}
 ?>

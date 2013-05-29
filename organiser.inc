@@ -1,5 +1,5 @@
 <?php
-	
+	require_once('common.inc');
 	function workshops_add_organiser(){		
 		$output = '<div class="form-item" id="academic-details"></div>';
 		$output .= drupal_get_form('workshops_add_organiser_form');
@@ -13,11 +13,22 @@
 		$form['#suffix'] = '</div>';
 		$form['#attributes'] = array('enctype' => "multipart/form-data");
 		
-		$form['academic_code'] = array(
-			'#type' => 'textfield',
-			'#title' => t('Academic Center Code'),
+		$form['state'] = array(
+			'#type' => 'select',
+			'#title' => t('State'),
 			'#required' => TRUE,
-			'#attributes' => array('class' => 'organiser_academic_code'),
+			'#options' => get_states(1),
+			'#attributes' => array('class' => 'add_reqs_state')
+		);
+		$form['academic_code'] = array(
+			'#type' => 'select',
+			'#title' => t('Institution Name'),
+			'#required' => TRUE,
+			'#validated' => TRUE,
+			'#options' => array('' => '-- select --'),
+			'#attributes' => array('class' => 'add_reqs_academic_code'),
+			'#prefix' => '<div class="reqs_academic_code_div">',
+			'#suffix' => '</div>'
 		);
 		$form['organiser_name'] = array(
 			'#type' => 'textfield',
@@ -43,12 +54,6 @@
 			'#required' => TRUE,
 			'#attributes' => array('class' => 'phone')
 		);
-		$form['department'] = array(
-			'#type' => 'textfield',
-			'#title' => t('Department / School'),
-			'#required' => TRUE,
-			'#attributes' => array('class' => 'department')
-		);
 		$form['submit'] = array(
 			'#type' => 'submit',
 			'#value' => t('Submit')
@@ -57,10 +62,7 @@
 		return $form;
 	}
 	function workshops_add_organiser_form_validate($form, &$form_state){
-		if (!preg_match('/^[0-9\ \+]{0,15}$/', $form_state['values']['phone'])){
-			form_set_error('phone number', t('Invalid Phone number'));
-		}
-		 if ($form_state['values']['academic_code'] != ''){
+		if ($form_state['values']['academic_code'] != ''){
 			$query = "select id from academic_center where academic_code='".$form_state['values']['academic_code']."'";
 			db_set_active('workshop_info');
 			$result = db_query($query);
@@ -68,8 +70,12 @@
 			if(!$row = db_fetch_object($result)){
 				form_set_error('academic_code', t('Invalid Academic Center Code'));			
 			}		
-                }
-
+		}else{
+			form_set_error('academic_code', t('Please select Institution Name'));
+		}
+		if (!preg_match('/^[0-9\ \+]{0,15}$/', $form_state['values']['phone'])){
+			form_set_error('phone', t('Invalid Phone number'));
+		}
 		
   		return;
 
@@ -90,10 +96,11 @@
 			}
 		}else{
 			//print_r($form_state['values']);
-			$query = "insert into organiser (academic_code,organiser_name,address,city,phone,department,organiser_id,status) values('".$form_state['values']['academic_code']."','".$form_state['values']['organiser_name']."', '".$form_state['values']['permanemt_address']."', '".$form_state['values']['city']."', '".$form_state['values']['phone']."', '".$form_state['values']['department']."', '".$user->uid."', 0)";
+			$query = "insert into organiser (academic_code,organiser_name,address,city,phone,organiser_id,status) values('".$form_state['values']['academic_code']."','".$form_state['values']['organiser_name']."', '".$form_state['values']['permanemt_address']."', '".$form_state['values']['city']."', '".$form_state['values']['phone']."', '".$user->uid."', 0)";
 			db_set_active('workshop_info');
 			if(db_query($query)){
-				drupal_set_message('Organiser Details Added Successfully');
+				drupal_set_message('<p>Your request has been sent for Resource person\'s approval.<br>You will get the approval in 24 hours.</p>');
+				drupal_set_message('<p>Once the request is approved, you have to Request for the Workshop.<br>For the instructions <a href="http://process.spoken-tutorial.org/images/8/89/Workshop-Request-Sheet.pdf" style="font-size: 16px;"><b><i>Click Here</i></b></a></p>');
 			}else {
 				drupal_set_message('Error Adding Organiser Details');
 			}

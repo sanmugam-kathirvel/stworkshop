@@ -1,5 +1,5 @@
 <?php
-	
+	require_once('common.inc');
 	function aworkshops_workshop_request(){
   $path = drupal_get_path('module', 'workshops');
 		drupal_add_js($path . '/datepickr.js');
@@ -33,14 +33,24 @@
 			}
 			$i++;
 		}
-
+		
 		$query = "select name from foss_categories";
 		$foss_categories = db_query($query);
 
 		while($row = db_fetch_object($foss_categories)) {
 			$foss_category[$row->name] = $row->name;
 		}
-
+		
+		$query = "select distinct name from departments order by name ASC";
+		db_set_active('workshop_info');
+		$result = db_query($query);
+		db_set_active('default');
+		$departments = array();
+		$departments[''] = '-- select --';
+		while($row = db_fetch_object($result)){
+			$departments[$row->name] = $row->name;
+		}
+		$departments['others'] = '...others...';
 		$path = drupal_get_path('module', 'workshops');
 		drupal_add_js($path . '/workshops.js', 'module');
 		drupal_add_css($path . '/workshops.css', 'module');
@@ -50,17 +60,29 @@
 		$form['#suffix'] = '</div>';		
 		$form['#attributes'] = array('enctype' => "multipart/form-data");
 
-		$form['academic_code'] = array(
-			'#type' => 'textfield',
-			'#title' => t('Academic Center Code'),
+		$form['state'] = array(
+			'#type' => 'select',
+			'#title' => t('State'),
 			'#required' => TRUE,
-			'#attributes' => array('class' => 'organiser_academic_code'),
+			'#options' => get_states(1),
+			'#attributes' => array('class' => 'add_reqs_state')
+		);
+		$form['academic_code'] = array(
+			'#type' => 'select',
+			'#title' => t('Institution Name'),
+			'#required' => TRUE,
+			'#validated' => TRUE,
+			'#options' => array('' => '-- select --'),
+			'#attributes' => array('class' => 'add_reqs_academic_code'),
+			'#prefix' => '<div class="reqs_academic_code_div">',
+			'#suffix' => '</div>'
 		);
 		$form['department'] = array(
-			'#type' => 'textfield',
+			'#type' => 'select',
 			'#title' => t('Department of Participants'),
 			'#required' => TRUE,
-			'#attributes' => array('class' => 'department'),
+			'#options' => $departments,
+			'#attributes' => array('class' => 'add_reqs_department'),
 		);
 		$form['pref_wkshop_date'] = array(
 			'#type' => 'textfield',
@@ -70,14 +92,12 @@
 		);
 		$form['pref_wkshop_time'] = array(
 			'#type' => 'select',
-			'#required' => TRUE,
 			'#options' => $hour,
 			'#attributes' => array('class' => 'pref_wkshop_time'),
 			'#prefix' => "<div class='date-and-time'><label for='edit-pref-wkshop-time'>Preferred Workshop Time:<span class='form-required' title='This field is required.'>*</span></label>",
 		);
 		$form['pref_wkshop_minute'] = array(
 			'#type' => 'select',
-			'#required' => TRUE,
 			'#options' => $minite,
 			'#attributes' => array('class' => 'pref_wkshop_minute'),
 			'#suffix' => "</div>"
@@ -112,9 +132,18 @@
 		if (!preg_match('/^[a-zA-Z ] +$/', $form_state['values']['department'])){
 		//	form_set_error('department', t('Invalid Department'));
 		}
-		if($form_state['values']['pref_language'] == ""){
-                        form_set_error('pref_language', t('Please select language'));
-                }
+        if($form_state['values']['academic_code'] == ""){
+        	form_set_error('academic_code', t('Please select Institution Name'));
+        }
+        if($form_state['values']['pref_wkshop_time'] == ""){
+        	form_set_error('pref_wkshop_time', t('Please select Hour'));
+        }
+        if($form_state['values']['pref_wkshop_minute'] == ""){
+        	form_set_error('pref_wkshop_minute', t('Please select Minute'));
+        }
+        if($form_state['values']['pref_language'] == ""){
+        	form_set_error('pref_language', t('Please select language'));
+        }
 
 	  return;
 	}
@@ -130,7 +159,7 @@
 		}
 		$pref_wkshop_date = $form_state['values']['pref_wkshop_date'];
 		$pref_wkshop_time = $form_state['values']['pref_wkshop_time'].':'.$form_state['values']['pref_wkshop_minute'];
-		$query = "insert into  workshop_requests(academic_code, organiser_id, department, pref_wkshop_date, pref_wkshop_time, foss_category, pref_language, skype_request) values('".$form_state['values']['academic_code']."', '".$user->uid."', '".$form_state['values']['department']."', '".$pref_wkshop_date."', '".$pref_wkshop_time."', '".$foss."', '".$form_state['values']['pref_language']."',0)";
+		$query = "insert into  workshop_requests(academic_code, organiser_id, department, pref_wkshop_date, pref_wkshop_time, foss_category, pref_language, skype_request) values('".$form_state['values']['academic_code']."', '".$user->uid."', '".trim($form_state['values']['department'])."', '".$pref_wkshop_date."', '".$pref_wkshop_time."', '".$foss."', '".$form_state['values']['pref_language']."',0)";
 		db_set_active('workshop_info');
 		if(db_query($query)){
 			// mail to Organiser

@@ -1,5 +1,5 @@
 <?php
-	
+	require_once('common.inc');
 	function workshops_test_request(){
 		$output = '<div class="form-item" id="academic-details"></div>';
 		$output .= drupal_get_form('workshops_test_request_form');
@@ -29,13 +29,6 @@
 			$i++;
 		}
 
-		$query = "select name from foss_categories";
-		$foss_categories = db_query($query);
-
-		while($row = db_fetch_object($foss_categories)) {
-			$foss_category[$row->name] = $row->name;
-		}
-
 		$rows = db_fetch_object($foss_categories);
 
 		while($row = db_fetch_object($foss_categories)) {
@@ -44,7 +37,27 @@
 		while($row = db_fetch_object($languages)) {
 			$language_array[$row->Language] = $row->Language;
 		}
-
+		
+		$query = "select distinct name from departments order by name ASC";
+		db_set_active('workshop_info');
+		$result = db_query($query);
+		db_set_active('default');
+		$departments = array();
+		$departments[''] = '-- select --';
+		while($row = db_fetch_object($result)){
+			$departments[$row->name] = $row->name;
+		}
+		$departments['others'] = '...others...';
+		$foss_categories[''] = ".. select ..";
+		$foss_categories['C'] = "C";
+		$foss_categories['C-Plus-Plus'] = "C++";		
+		$foss_categories['Java'] = "Java";
+		$foss_categories['LaTeX'] = "LaTeX";
+		$foss_categories['Linux'] = "Linux";
+		// $foss_categories['OpenFOAM'] = "OpenFOAM";
+		$foss_categories['PHP-and-MySQL'] = "PHP and MySQL";
+		$foss_categories['Python'] = "Python";
+		$foss_categories['Scilab'] = "Scilab";
 		$path = drupal_get_path('module', 'workshops');
 		drupal_add_js($path . '/datepickr.js');
 		drupal_add_css($path . '/datepickr.css');
@@ -55,23 +68,39 @@
 		$form['#suffix'] = '</div>';
 		$form['#attributes'] = array('enctype' => "multipart/form-data");
 
-		$form['academic_code'] = array(
-			'#type' => 'textfield',
-			'#title' => t('Academic Center Code'),
+		$form['state'] = array(
+			'#type' => 'select',
+			'#title' => t('State'),
 			'#required' => TRUE,
-			'#attributes' => array('class' => 'organiser_academic_code'),
+			'#options' => get_states(1),
+			'#attributes' => array('class' => 'add_reqs_state')
+		);
+		$form['academic_code'] = array(
+			'#type' => 'select',
+			'#title' => t('Institution Name'),
+			'#required' => TRUE,
+			'#validated' => TRUE,
+			'#options' => array('' => '-- select --'),
+			'#attributes' => array('class' => 'add_reqs_academic_code'),
+			'#prefix' => '<div class="reqs_academic_code_div">',
+			'#suffix' => '</div>'
 		);
 		$form['department'] = array(
-			'#type' => 'textfield',
-			'#title' => t('Department'),
+			'#type' => 'select',
+			'#title' => t('Department of Participants'),
 			'#required' => TRUE,
-			'#attributes' => array('class' => 'department')
+			'#options' => $departments,
+			'#attributes' => array('class' => 'add_reqs_department'),
 		);
-		$form['batches'] = array(
-			'#type' => 'textfield',
-			'#title' => t('Number of Batches'),
+		$form['invigilator_id'] = array(
+			'#type' => 'select',
+			'#title' => t('Invigilator Name'),
 			'#required' => TRUE,
-			'#attributes' => array('class' => 'batches')
+			'#validated' => TRUE,
+			'#options' => array('' => '-- select --'),
+			'#attributes' => array('class' => 'add_invigilator_sel'),
+			'#prefix' => '<div class="add_reqs_invigilator_div">',
+			'#suffix' => '</div>'
 		);
 		$form['pref_test_date'] = array(
 			'#type' => 'textfield',
@@ -98,7 +127,7 @@
 		$form['foss_category'] = array(
 			'#type' => 'select',
 			'#title' => t('Foss Category'),
-			'#options' => $foss_category,
+			'#options' => human_text($foss_categories),
 			'#required' => TRUE,
 			'#attributes' => array('class' => 'foss_category')
 		);
@@ -106,26 +135,26 @@
 			'#type' => 'submit',
 			'#value' => t('Submit')
 		);
-		
+		drupal_set_message('Please note: Confirm Invigilator availability and acceptance to invigilate before adding his name in this form.');
 		return $form;
 	}
 	
 	function workshops_test_request_form_validate($form, &$form_state){
-		if($form_state['values']['batches'] != ""){
-			if (!preg_match('/^[0-9\ \+]{0,15}$/', $form_state['values']['batches'])){
-				form_set_error('batches', t('Please provide valid batch count'));
-			}
+		if($form_state['values']['academic_code'] == ""){
+        	form_set_error('academic_code', t('Please select Institution Name'));
+        }
+		if($form_state['values']['invigilator_id'] == ""){
+			form_set_error('invigilator_id', t('Please select Invigilator Name'));
 		}
 	}
 	function workshops_test_request_form_submit($form, &$form_state){
 		global $user;
 		$pref_test_date = $form_state['values']['pref_test_date'];
 		$pref_test_time = $form_state['values']['pref_test_time'].':'.$form_state['values']['pref_test_minute'];
-		$query = "insert into  test_requests values('','', '".$form_state['values']['academic_code']."', '".$user->uid."', '".$form_state['values']['department']."', ".$form_state['values']['batches'].", '".$pref_test_date."','', '".$pref_test_time."', '', '".$form_state['values']['foss_category']."', '')";
+		$query = "insert into  test_requests values('','', '".$form_state['values']['academic_code']."', '".$user->uid."', '".$form_state['values']['department']."', '".$form_state['values']['invigilator_id']."', '".$pref_test_date."','', '".$pref_test_time."', '', '".$form_state['values']['foss_category']."', '')";
 		db_set_active('workshop_info');
 		if(db_query($query)){
-		// mail to Organiser
-
+			// mail to Organiser
 			//$mailfrom = variable_get('site_mail');
 			$mailto = $user->mail;
 			$subject = 'Test Request Notification';
@@ -148,7 +177,8 @@
 			
 			workshops_notify($mailto, $subject, $message);
 			
-			drupal_set_message('Test Request Details Added Successfully');
+			drupal_set_message('Test Request Added Successfully');
+			drupal_set_message('<p>Upgrade the browser before the test with latest version, <br>for instructions <a href="" style="font-size: 16px;"><b><i>Click Here</i></b></a></p>');
 			drupal_goto($path = 'workshops/test_request', $query = NULL, $fragment = NULL, $http_response_code = 302);
 		}else {
 			drupal_set_message('Error Adding Test Request Details');
@@ -164,8 +194,8 @@
 		$count_query = "";
 		
 		if(in_array('organiser', array_values($user->roles))) {
-			$query = "select * from test_requests where organiser_id=".$user->uid." and status=0";
-			$count_query = "select count(*) from test_requests where organiser_id=".$user->uid." and status=0";
+			$query = "select tr.id, tr.academic_code, tr.department, tr.pref_test_date, tr.pref_test_time from test_requests tr where organiser_id=".$user->uid." and status=0";
+			$count_query = "select count(id) from test_requests where organiser_id=".$user->uid." and status=0";
 		}
 		
 		if(in_array('resource_person', array_values($user->roles))) {
@@ -183,24 +213,35 @@
 				}
 				$tmp_query_param .=	"academic_code like '".$st_code."%'";
 			}
-			$query = "select * from test_requests where (".$tmp_query_param.") and status=0";
-			$count_query = "select count(*) from test_requests where (".$tmp_query_param.") and status=0";
+			$query = "select tr.id, tr.academic_code, tr.department, tr.pref_test_date, tr.pref_test_time, tr.foss_category from test_requests tr where (".$tmp_query_param.") and status=0";
+			$count_query = "select count(id) from test_requests where (".$tmp_query_param.") and status=0";
 		}
 		if(in_array('organiser', array_values($user->roles))) {
-			$header = array('FOSS Category', 'Academic Center Code', 'Department', 'Preferred date & time');
+			$header = array(
+				array('data'=>'FOSS Category', 'field'=>'tr.foss_category', 'sort'=>'asc'),
+				array('data'=>'Academic Center Code', 'field'=>'tr.academic_code'),
+				array('data'=>'Department', 'field'=>'tr.department'),
+				array('data'=>'Preferred Date & Time', 'field'=>'tr.pref_test_date')
+			);
 		}
 		if(in_array('resource_person', array_values($user->roles))) {
-			$header = array('FOSS Category', 'Academic Center Code', 'Department', 'Preferred date & time', '');
+			$header = array(
+				array('data'=>'FOSS Category', 'field'=>'tr.foss_category', 'sort'=>'asc'),
+				array('data'=>'Academic Center Code', 'field'=>'tr.academic_code'),
+				array('data'=>'Department', 'field'=>'tr.department'),
+				array('data'=>'Preferred Date & Time', 'field'=>'tr.pref_test_date'),
+				array('data'=>'')
+			);
 		}
+		$query .= tablesort_sql($header);
 		db_set_active('workshop_info');
 		$result = pager_query($query , 30, 0, $count_query);
 		db_set_active('default');
 		$row = array();
 		$sno = 1;
-		
 		while ($item = db_fetch_object($result)) {
 			if(in_array('resource_person', array_values($user->roles))) {
-				$row[] = array($item->foss_category, $item->academic_code, $item->department, $item->pref_test_date." ".$item->pref_test_time, l('Confirm', 'workshops/test_confirm/'. $item->id, array('attributes' => array('class' => 'confirm-record', 'title' => 'Confirm'))));
+				$row[] = array($item->foss_category, $item->academic_code, $item->department, $item->pref_test_date." ".$item->pref_test_time, l('Confirm', 'workshops/test_confirm/'. $item->id, array('attributes' => array('class' => 'confirm-record', 'title' => 'Confirm'))).l('Reject', 'workshops/test_delete/'. $item->id, array('attributes' => array('class' => 'delete-record', 'title' => 'Reject', 'onclick' => 'return confirm("Are you sure?")'))));
 			}else {
 				$row[] = array($item->foss_category, $item->academic_code, $item->department, $item->pref_test_date." ".$item->pref_test_time);
 			}
@@ -209,8 +250,8 @@
 			$output .= '<div style="color:red;text-align:center;">List is empty.</div>';
 		} else {
 			drupal_set_message($message);
-			$output = theme('table', $header, $row);
-			$output .= theme('pager');
+			$output .= theme_table($header,$row);
+			$output .= theme_pager(null, 30);
 		}
 		return $output;
 	}
@@ -222,8 +263,8 @@
 		$count_query = "";
 		
 		if(in_array('organiser', array_values($user->roles))) {
-			$query = "select * from test_requests where organiser_id=".$user->uid." and status=1";
-			$count_query = "select count(*) from test_requests where organiser_id=".$user->uid." and status=1";
+			$query = "select id, test_code, academic_code, cfm_test_date, cfm_test_time, foss_category, status from test_requests where organiser_id=".$user->uid." and status!=0 and status!=3 and status!=4";
+			$count_query = "select count(id) from test_requests where organiser_id=".$user->uid." and status!=0 and status!=3 and status!=4";
 		}
 		
 		if(in_array('resource_person', array_values($user->roles))) {
@@ -241,33 +282,54 @@
 				}
 				$tmp_query_param .=	"academic_code like '".$st_code."%'";
 			}
-			$query = "select * from test_requests where (".$tmp_query_param.") and status=1 order by cfm_test_date DESC";
+			$query = "select id, test_code, academic_code, cfm_test_date, cfm_test_time, foss_category, status from test_requests where (".$tmp_query_param.") and status!=0 and status!=3 and status!=4";
 			//echo $query; die;
-			$count_query = "select count(*) from test_requests where (".$tmp_query_param.") and status=1 order by cfm_test_date DESC";
+			$count_query = "select count(id) from test_requests where (".$tmp_query_param.") and status!=0 and status!=3 and status!=4";
 		}
 		if(in_array('organiser', array_values($user->roles))) {
-			$header = array('Code', 'FOSS Category', 'Academic Code', 'Confirmed date & time');
+			$header = array(
+				array('data'=>'Code', 'field'=>'id'),
+				array('data'=>'FOSS Category', 'field'=>'foss_category', 'sort'=>'asc'),
+				array('data'=>'Academic Center Code', 'field'=>'academic_code'),
+				array('data'=>'Date & Time', 'field'=>'cfm_test_date'),
+				array('data'=>'Status', 'field'=>'status')
+			);
 		}
 		if(in_array('resource_person', array_values($user->roles))) {
-			$header = array('Code', 'FOSS Category', 'Academic Code', 'Confirmed date & time', '');
+			$header = array(
+				array('data'=>'Code', 'field'=>'id'),
+				array('data'=>'FOSS Category', 'field'=>'foss_category', 'sort'=>'asc'),
+				array('data'=>'Academic Center Code', 'field'=>'academic_code'),
+				array('data'=>'Date & Time', 'field'=>'cfm_test_date'),
+				array('data'=>'Status', 'field'=>'status'),
+				array('data'=>'')
+			);
 		}
+		$query .= tablesort_sql($header);
 		db_set_active('workshop_info');
 		$result = pager_query($query , 30, 0, $count_query);
 		db_set_active('default');
 		$row = array();
 		while ($item = db_fetch_object($result)) {
+			$status_data = '';
+			if($item->status == 1){
+				$status_data = 'Waiting for Invigilator\'s approval';
+			}
+			if($item->status == 2){
+				$status_data = 'Approved';
+			}
 			if(in_array('resource_person', array_values($user->roles))) {
-				$row[] = array($item->test_code, $item->foss_category, $item->academic_code, $item->cfm_test_date." ".$item->cfm_test_time, l('Edit', 'workshops/test_edit/'. $item->id, array('attributes' => array('class' => 'edit-record', 'title' => 'Edit'))));
+				$row[] = array($item->test_code, $item->foss_category, $item->academic_code, $item->cfm_test_date." ".$item->cfm_test_time, $status_data, l('Edit', 'workshops/test_edit/'. $item->id, array('attributes' => array('class' => 'edit-record', 'title' => 'Edit'))));
 			}else {
-				$row[] = array($item->test_code, $item->foss_category, $item->academic_code, $item->cfm_test_date." ".$item->cfm_test_time);
+				$row[] = array($item->test_code, $item->foss_category, $item->academic_code, $item->cfm_test_date." ".$item->cfm_test_time, $status_data);
 			}
 		}
 		if (count($row) == 0) {
 			$output .= '<div style="color:red;text-align:center;">List is empty.</div>';
 		} else {
 			drupal_set_message($message);
-			$output = theme('table', $header, $row);
-			$output .= theme('pager');
+			$output .= theme_table($header,$row);
+			$output .= theme_pager(null, 30);
 		}
 		return $output;
 	}
@@ -279,8 +341,8 @@
 		$count_query = "";
 		
 		if(in_array('organiser', array_values($user->roles))) {
-			$query = "select * from test_requests where organiser_id=".$user->uid." and status=2";
-			$count_query = "select count(*) from test_requests where organiser_id=".$user->uid." and status=2";
+			$query = "select id, test_code, academic_code, cfm_test_date, cfm_test_time, foss_category from test_requests where organiser_id=".$user->uid." and status=4";
+			$count_query = "select count(id) from test_requests where organiser_id=".$user->uid." and status=4";
 		}
 		
 		if(in_array('resource_person', array_values($user->roles))) {
@@ -290,7 +352,6 @@
 			db_set_active('default');
 			$row = db_fetch_object($result);
 			$state_code_arr = explode(',', $row->states);
-		
 			$tmp_query_param = "";
 			foreach($state_code_arr as $st_code){
 				if($tmp_query_param != ""){
@@ -298,11 +359,18 @@
 				}
 				$tmp_query_param .=	"academic_code like '".$st_code."%'";
 			}
-			$query = "select * from test_requests where (".$tmp_query_param.") and status=2 order by cfm_test_date DESC";
+			$query = "select id, test_code, academic_code, cfm_test_date, cfm_test_time, foss_category from test_requests where (".$tmp_query_param.") and status=4";
 			//echo $query; die;
-			$count_query = "select count(*) from test_requests where (".$tmp_query_param.") and status=2 order by cfm_test_date DESC";
+			$count_query = "select count(id) from test_requests where (".$tmp_query_param.") and status=4";
 		}
-		$header = array('Code', 'FOSS', 'Academic Code', 'Date & Time', '');
+		$header = array(
+			array('data'=>'Code', 'field'=>'id'),
+			array('data'=>'FOSS', 'field'=>'foss_category', 'sort'=>'asc'),
+			array('data'=>'Academic Code', 'field'=>'academic_code'),
+			array('data'=>'Date & Time', 'field'=>'cfm_test_date'),
+			array('data'=>'')
+		);
+		$query .= tablesort_sql($header);
 		db_set_active('workshop_info');
 		$result = pager_query($query , 30, 0, $count_query);
 		db_set_active('default');
@@ -315,8 +383,8 @@
 			$output .= '<div style="color:red;text-align:center;">List is empty.</div>';
 		} else {
 			drupal_set_message($message);
-			$output = theme('table', $header, $row);
-			$output .= theme('pager');
+			$output .= theme_table($header,$row);
+			$output .= theme_pager(null, 30);
 		}
 		return $output;
 	}
@@ -326,21 +394,31 @@
 			$query = "select * from {test_requests} WHERE id='". $id."'";
 			db_set_active('workshop_info');
 			$result = db_query($query);
+			db_set_active('default');
 			$item = db_fetch_object($result);
 
-			$query = "select * from {academic_center} WHERE academic_code='". $item->academic_code."'";
-
-			$result = db_query($query);
-			$academic_item = db_fetch_object($result);
-			db_set_active('default');
 			$output = '<div class="form-item" id="academic-details"><table>';
 			$output .= '<tr><td>Academic Center Code</td><td>: '.$item->academic_code.'</td></tr>';
-			$output .= '<tr><td>Language</td><td>: '.$item->pref_language.'</td></tr>';
+			// $output .= '<tr><td>Language</td><td>: '.$item->pref_language.'</td></tr>';
 			$output .= '<tr><td>FOSS Category</td><td>: '.$item->foss_category.'</td></tr>';
 			$output .= '<tr><td>Preferred Date & Time</td><td>: '.$item->pref_test_date.' '.$item->pref_test_time.'</td></tr>';
 			$output .= '</table></div>';
 			$output .= drupal_get_form('workshops_test_confirm_form', $id, $item->pref_test_date, $item->pref_test_time, $item->organiser_id);
 			return $output;
+		}else{
+			return "<p>Sorry, no data found.</p>";
+		}
+	}
+
+	function workshops_test_delete($id = NULL){
+		if($id){
+			$query = "delete from test_requests where id=".$id;
+			db_set_active('workshop_info');
+			db_query($query);
+			db_set_active('default');
+			
+			drupal_set_message('Test request removed successfully!');
+			drupal_goto('workshops/list_test_request');
 		}else{
 			return "<p>Sorry, no data found.</p>";
 		}
@@ -422,7 +500,6 @@
 		 // 	form_set_error('email', t('Invalid Email'));
 		 // }
   		return;
-
 	}
 	function workshops_test_confirm_form_submit($form, &$form_state){
 		global $user;
@@ -451,7 +528,7 @@
 			$subject = 'Test confirmation Notification';
 			$message = "<p>Dear ".$row->organiser_name.",</p><p> Your new Test request has has been confirmed.</p><p><b>Test Details</b></p><p>Test code : ".$test_code."</p><p>Confirmed Test Date : ".$cfm_test_date."</p><p>Confirmed Test Time : ".$cfm_test_time."</p>";
 			workshops_notify( $mailto, $subject, $message);
-			drupal_goto($path = 'workshops/list_test_approval', $query = NULL, $fragment = NULL, $http_response_code = 302);
+			drupal_goto($path = 'workshops/list_test_request', $query = NULL, $fragment = NULL, $http_response_code = 302);
 		}else {
 			drupal_set_message('Error Adding Test Confirm Details');
 		}
@@ -549,6 +626,8 @@
 			}
 			$i++;
 		}
+		$form['#prefix'] = '<div class="workshop-form">';
+		$form['#suffix'] = '</div>';
 		$form['#attributes'] = array('enctype' => "multipart/form-data");
 		$form['id'] = array(
 			'#type' => 'hidden',
@@ -574,7 +653,7 @@
 			'#options' => $hour,
 			'#default_value' => $time_arr[0],
 			'#attributes' => array('class' => 'pref_test_time'),
-			'#prefix' => "<div class='date-and-time'><label for='edit-pref-test-time'><b>Confirmed Test Time: </b><span class='form-required' title='This field is required.'>*</span></label>",
+			'#prefix' => "<div class='date-and-time'><label for='edit-pref-test-time'>Confirmed Test Time:<span class='form-required' title='This field is required.'>*</span></label>",
 		);
 		$form['cfm_test_minute'] = array(
 			'#type' => 'select',

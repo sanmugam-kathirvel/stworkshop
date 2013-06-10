@@ -319,7 +319,7 @@
 				$output .= '<tr><td><b>Department</b>&nbsp;<b>:</b> '.$row->department.'</td><td><b>FOSS category</b>&nbsp;<b>:</b> '.$row->foss_category.'</td></tr>';
 				$output .= '</table><br><br>';
 				
-				$query = "select ar.id, ar.status, mu.username, mu.picture, mu.firstname, mu.lastname, mu.institution from workshop_info.attendance_register ar, OTC.mdl_user mu where ar.test_code='".$row->test_code."' and mu.id=ar.moodle_uid";
+				$query = "select ar.id, ar.status, mu.id, mu.username, mu.picture, mu.firstname, mu.lastname, mu.institution from workshop_info.attendance_register ar, OTC.mdl_user mu where ar.test_code='".$row->test_code."' and mu.id=ar.moodle_uid";
 				$count_query = "select count(ar.id) from workshop_info.attendance_register ar, OTC.mdl_user mu where ar.test_code='".$row->test_code."' and mu.id=ar.moodle_uid";
 				$header = array('<input type="checkbox" name="selectall" id="selectall" class="select-all">', 'Username', 'Name', 'Institution');
 				db_set_active('workshop_info');
@@ -333,7 +333,7 @@
 					if($item->status == 1){
 						$checked_value = 'checked';
 					}
-					$rows[] = array('<input type="checkbox" name="user'.$count.'" value="'.$item->id.'" '.$checked_value.'>', '<img src="http://10.102.152.121/spoken_tutorial_org/OTC/theme/image.php/leatherbound/core/1355324212/u/f1?rev='.$item->picture.'">', $item->username, $item->firstname.' '.$item->lastname, $item->institution);
+					$rows[] = array('<input type="checkbox" name="user'.$count.'" value="'.$item->id.'" '.$checked_value.'>', '<img src="http://onlinetest.spoken-tutorial.org/get_profile_picture.php?id="'.$item->id.'>', $item->username, $item->firstname.' '.$item->lastname, $item->institution);
 				}
 				if ($count == 0) {
 					$output .= '<div style="color:red;text-align:center;">List is empty.</div></form>';

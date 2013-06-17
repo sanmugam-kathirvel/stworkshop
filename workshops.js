@@ -1,6 +1,23 @@
 $(document).ready(function(){
- webroot = 'http://'+location.hostname+'/spoken_tutorial_org/workshops/';
- loading_image = "<img src='http://"+location.hostname+"/spoken_tutorial_org/ajax-loader.gif' />";
+	webroot = 'http://'+location.hostname+'/spoken_tutorial_org/workshops/';
+	loading_image = "<img src='http://"+location.hostname+"/spoken_tutorial_org/ajax-loader.gif' />";
+	$('.resource_center_details').css({'display':'none'});
+	$('#edit-resource-center-1').change(function(){
+		var disp_val = $(this).val();
+		if(disp_val == 1){
+			$('.resource_center_details').css({'display':'block'});
+		}else {
+			$('.resource_center_details').css({'display':'none'});
+		}
+	});
+	$('#edit-resource-center-0').change(function(){
+		var disp_val = $(this).val();
+		if(disp_val == 1){
+			$('.resource_center_details').css({'display':'block'});
+		}else {
+			$('.resource_center_details').css({'display':'none'});
+		}
+	});
 	$('.college_state').change(function(){
 		if($('.college_state').val() != ''){
 			$.ajax({

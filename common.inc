@@ -9,6 +9,9 @@
 		$states_array = array();
 		if($empty){
 			$states_array[''] = "-- select --";
+			if($empty == 2){
+				$states_array['all'] = "All";
+			}
 		}
 		while($row = db_fetch_object($result)){
 			$states_array[$row->code] = $row->name;

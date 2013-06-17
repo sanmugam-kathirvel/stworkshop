@@ -201,13 +201,13 @@
 
 	function workshop_request_delete($id = NULL){
 		if($id){
-			$query = "delete from workshop_requests where id=".$id;
+			$query = "update workshop_requests set status=3 where id=".$id;
 			db_set_active('workshop_info');
 			db_query($query);
 			db_set_active('default');
 			
 			drupal_set_message('Workshop request removed successfully!');
-			drupal_goto('workshops/list_workshop_request');
+			drupal_goto($_SERVER['HTTP_REFERER']);
 		}else{
 			return "<p>Sorry, no data found.</p>";
 		}
@@ -220,8 +220,8 @@
 		$count_query = "";
 		
 		if(in_array('organiser', array_values($user->roles))) {
-			$query = "select wr.*, o.organiser_name from workshop_requests wr, organiser o where wr.organiser_id=".$user->uid." and wr.status=0 and wr.organiser_id=o.organiser_id";
-			$count_query = "select count(*) from workshop_requests wr, organiser o where wr.organiser_id=".$user->uid." and wr.status=0 and wr.organiser_id=o.organiser_id";
+			$query = "select wr.*, ac.institution_name, o.organiser_name from workshop_requests wr, organiser o, academic_center ac where wr.organiser_id=".$user->uid." and wr.status=0 and wr.organiser_id=o.organiser_id and ac.academic_code=wr.academic_code";
+			$count_query = "select count(*) from workshop_requests wr, organiser o, academic_center ac where wr.organiser_id=".$user->uid." and wr.status=0 and wr.organiser_id=o.organiser_id and ac.academic_code=wr.academic_code";
 		}
 
 		if(in_array('resource_person', array_values($user->roles))) {
@@ -239,27 +239,26 @@
 				}
 			$tmp_query_param .=	"wr.academic_code like '".$st_code."%'";
 			}
-			$query = "select wr.*, o.organiser_name from workshop_requests wr, organiser o where (".$tmp_query_param.") and wr.status=0 and wr.organiser_id=o.organiser_id";
+			$query = "select wr.*, ac.institution_name, o.organiser_name from workshop_requests wr, organiser o, academic_center ac where (".$tmp_query_param.") and wr.status=0 and wr.organiser_id=o.organiser_id and ac.academic_code=wr.academic_code";
 		//echo $query."<br /><br />";
-			$count_query = "select count(*) from workshop_requests wr, organiser o where (".$tmp_query_param.") and wr.status=0 and wr.organiser_id=o.organiser_id";
+			$count_query = "select count(*) from workshop_requests wr, organiser o, academic_center ac where (".$tmp_query_param.") and wr.status=0 and wr.organiser_id=o.organiser_id and ac.academic_code=wr.academic_code";
 		//echo $count_query."<br />"; die;
 		}
+		// echo $query; die;
 		if(in_array('organiser', array_values($user->roles))){
 			$header = array(
-				array('data'=>'SNO'),
 				array('data'=>'FOSS', 'field'=>'wr.foss_category'),
-				array('data'=>'Academic Center Code', 'field'=>'wr.academic_code'),
-				array('data'=>'Department', 'field'=>'wr.department'),
+				array('data'=>'Institution Name', 'field'=>'wr.institution_name'),
 				array('data'=>'Organiser', 'field'=>'o.organiser_name'),
+				array('data'=>'Workshop Date', 'field'=>'wr.pref_wkshop_date'),
 			);
 		}
 		if(in_array('resource_person', array_values($user->roles))){
 			$header = array(
-				array('data'=>'SNO'),
 				array('data'=>'FOSS', 'field'=>'wr.foss_category'),
-				array('data'=>'Academic Center Code', 'field'=>'wr.academic_code'),
-				array('data'=>'Department', 'field'=>'wr.department'),
+				array('data'=>'Institution Name', 'field'=>'wr.institution_name'),
 				array('data'=>'Organiser', 'field'=>'o.organiser_name'),
+				array('data'=>'Workshop Date', 'field'=>'wr.pref_wkshop_date'),
 				array('data'=>'')
 			);
 		}
@@ -273,9 +272,9 @@
 		while ($item = db_fetch_object($result)) {
 			// $row_tmp = db_fetch_object($res1);
 			if(in_array('resource_person', array_values($user->roles))){
-				$row[] = array($sno++, human_text($item->foss_category), $item->academic_code, $item->department, $item->organiser_name, l(t('Confirm'), 'workshops/workshop_confirm/'. $item->id, array('attributes' => array('class' => 'confirm-record', 'title' => 'Confirm'))).l('Reject', 'workshops/workshop_delete/'. $item->id, array('attributes' => array('class' => 'delete-record', 'title' => 'Reject', 'onclick' => 'return confirm("Are you sure?")'))));
+				$row[] = array(human_text($item->foss_category), $item->institution_name, $item->organiser_name, $item->pref_wkshop_date, l(t('Confirm'), 'workshops/workshop_confirm/'. $item->id, array('attributes' => array('class' => 'confirm-record', 'title' => 'Confirm'))).l('Reject', 'workshops/workshop_delete/'. $item->id, array('attributes' => array('class' => 'delete-record', 'title' => 'Reject', 'onclick' => 'return confirm("Are you sure?")'))));
 			}else {
-				$row[] = array($sno++, human_text($item->foss_category), $item->academic_code, $item->department, $item->organiser_name);
+				$row[] = array(human_text($item->foss_category), $item->institution_name, $item->organiser_name, $item->pref_wkshop_date);
 			}
 		}
 		if (count($row) == 0) {
@@ -325,7 +324,7 @@
 				array('data'=>'FOSS', 'field'=>'wr.foss_category'),
 				array('data'=>'Academic Center Code', 'field'=>'wr.academic_code'),
 				array('data'=>'Date & Time', 'field'=>'wr.cfm_wkshop_date'),
-				array('data'=>'Department', 'field'=>'wr.department'),
+				// array('data'=>'Department', 'field'=>'wr.department'),
 				array('data'=>'Organiser', 'field'=>'o.organiser_name')
 			);
 		}
@@ -335,7 +334,7 @@
 				array('data'=>'FOSS', 'field'=>'wr.foss_category'),
 				array('data'=>'Academic Center Code', 'field'=>'wr.academic_code'),
 				array('data'=>'Date & Time', 'field'=>'wr.cfm_wkshop_date'),
-				array('data'=>'Department', 'field'=>'wr.department'),
+				// array('data'=>'Department', 'field'=>'wr.department'),
 				array('data'=>'Organiser', 'field'=>'o.organiser_name'),
 				array('data'=>'')
 			);
@@ -349,9 +348,9 @@
 		
 		while ($item = db_fetch_object($result)) {
 			if(in_array('resource_person', array_values($user->roles))){
-				$row[] = array($item->workshop_code, human_text($item->foss_category), $item->academic_code, $item->cfm_wkshop_date.' '.$item->cfm_wkshop_time, $item->department, $item->organiser_name, l('Edit', 'workshops/workshop_edit/'. $item->id, array('attributes' => array('class' => 'edit-record', 'title' => 'Edit'))));
+				$row[] = array($item->workshop_code, human_text($item->foss_category), $item->academic_code, $item->cfm_wkshop_date.' '.$item->cfm_wkshop_time, /*$item->department,*/ $item->organiser_name, l('Edit', 'workshops/workshop_edit/'. $item->id, array('attributes' => array('class' => 'edit-record', 'title' => 'Edit'))).' '.l('Reject', 'workshops/workshop_delete/'. $item->id, array('attributes' => array('class' => 'delete-record', 'title' => 'Reject', 'onclick' => 'return confirm("Are you sure?")'))));
 			}else {
-				$row[] = array($item->workshop_code, human_text($item->foss_category), $item->academic_code, $item->cfm_wkshop_date.' '.$item->cfm_wkshop_time, $item->department, $item->organiser_name);
+				$row[] = array($item->workshop_code, human_text($item->foss_category), $item->academic_code, $item->cfm_wkshop_date.' '.$item->cfm_wkshop_time, /*$item->department,*/ $item->organiser_name);
 			}
 		}
 		if (count($row) == 0) {
@@ -374,9 +373,9 @@
 	
 		$query = "select name from foss_categories";
 		$foss_categories = db_query($query);
-
+		$foss_category['all'] = 'All';
 		while($row = db_fetch_object($foss_categories)) {
-			$foss_category[$row->name] = $row->name;
+			$foss_category[$row->name] = human_text($row->name);
 		}
 	
 		$form['states'] = array(
@@ -404,18 +403,22 @@
 	function workshops_list_workshop_completed(){
 		global $user;
 		
-		$foss = 'Linux';
+		$foss = 'all';
 		if(isset($_REQUEST['foss'])){
 			$foss = $_REQUEST['foss'];
 		}
 		
 		$output = drupal_get_form('cw_filter_form', $foss);
-		$query = "select wr.*, o.organiser_name from workshop_requests wr, organiser o where wr.status=2 and wr.organiser_id=o.organiser_id and wr.foss_category='".$foss."'";
-		$count_query = "select count(*) from workshop_requests wr, organiser o where wr.status=2 and wr.organiser_id=o.organiser_id and wr.foss_category='".$foss."'";
+		$foss_condition = "";
+		if($foss != 'all') {
+			$foss_condition = " and wr.foss_category='".$foss."'";
+		}
+		$query = "select wr.*, ac.institution_name, ac.state_code from workshop_requests wr, academic_center ac where wr.status=2".$foss_condition." and ac.academic_code=wr.academic_code";
+		$count_query = "select count(*) from workshop_requests wr, academic_center ac where wr.status=2".$foss_condition." and ac.academic_code=wr.academic_code";
 		
 		if(in_array('organiser', array_values($user->roles))) {
-			$query = "select wr.*, o.organiser_name from workshop_requests wr, organiser o where wr.organiser_id=".$user->uid." and wr.status=2 and wr.organiser_id=o.organiser_id and wr.foss_category='".$foss."'";
-			$count_query = "select count(*) from workshop_requests wr, organiser o where wr.organiser_id=".$user->uid." and wr.status=2 and wr.organiser_id=o.organiser_id and wr.foss_category='".$foss."'";
+			$query = "select wr.*, ac.institution_name, ac.state_code from workshop_requests wr, academic_center ac where wr.organiser_id=".$user->uid." and wr.status=2".$foss_condition." and ac.academic_code=wr.academic_code";
+			$count_query = "select count(*) from workshop_requests wr, academic_center ac where wr.organiser_id=".$user->uid." and wr.status=2".$foss_condition." and ac.academic_code=wr.academic_code";
 		}
 		
 		if(in_array('resource_person', array_values($user->roles))) {
@@ -433,16 +436,17 @@
 				}
 				$tmp_query_param .=	"wr.academic_code like '".$st_code."%'";
 			}
-			$query = "select wr.* from workshop_requests wr where (".$tmp_query_param.") and wr.status=2 and wr.foss_category='".$foss."'";
+			$query = "select wr.*, ac.institution_name, ac.state_code from workshop_requests wr, academic_center ac where (".$tmp_query_param.") and wr.status=2".$foss_condition." and ac.academic_code=wr.academic_code";
 			//echo $query."<br /><br />";
-			$count_query = "select count(*) from workshop_requests wr where (".$tmp_query_param.") and wr.status=2 and wr.foss_category='".$foss."'";
+			$count_query = "select count(*) from workshop_requests wr, academic_center ac where (".$tmp_query_param.") and wr.status=2".$foss_condition." and ac.academic_code=wr.academic_code";
 			//echo $count_query."<br />"; die;
 		}
 		$header = array(
 			array('data'=>'Workshop Code', 'field'=>'wr.workshop_code', 'sort'=>'asc'),
-			array('data'=>'FOSS', 'field'=>'wr.foss_category'),
-			array('data'=>'Language', 'field'=>'wr.pref_language'),
-			array('data'=>'Academic Center Code', 'field'=>'wr.academic_code'),
+			// array('data'=>'FOSS', 'field'=>'wr.foss_category'),
+			// array('data'=>'Language', 'field'=>'wr.pref_language'),
+			array('data'=>'Institution', 'field'=>'ac.institution_name'),
+			array('data'=>'State', 'field'=>'ac.state_code'),
 			array('data'=>'Date & Time', 'field'=>'wr.cfm_wkshop_date'),
 			array('data'=>'')
 		);
@@ -452,9 +456,9 @@
 		db_set_active('default');
 		$row = array();
 		$sno = 1;
-		
+		$states_array = get_states(0);
 		while ($item = db_fetch_object($result)) {
-			$row[] = array($item->workshop_code, human_text($item->foss_category), $item->pref_language, $item->academic_code, $item->cfm_wkshop_date." ".$item->cfm_wkshop_time, l('View', 'workshops/view_workshop/'. $item->id, array('attributes' => array('class' => 'view-record', 'title' => 'View'))));
+			$row[] = array($item->workshop_code, /*human_text($item->foss_category), $item->pref_language,*/ $item->institution_name, $states_array[$item->state_code], $item->cfm_wkshop_date." ".$item->cfm_wkshop_time, l('View', 'workshops/view_workshop/'. $item->id, array('attributes' => array('class' => 'view-record', 'title' => 'View'))));
 		}
 		if (count($row) == 0) {
 			$output .= '<div style="color:red;text-align:center;">List is empty.</div>';
@@ -749,7 +753,7 @@
 	 			$item = db_fetch_object($result);
 	 			$output = '<table width="100%" cellpadding="6">';
 	 			$output .= '<tr><td><b>Workshop Code</b></td><td><b>'.$item->workshop_code.'</b></td></tr>';
-	 			$output .= '<tr><td><b>Foss Category</b></td><td><b>'.$item->foss_category.'</b></td></tr>';
+	 			$output .= '<tr><td><b>Foss Category</b></td><td><b>'.human_text($item->foss_category).'</b></td></tr>';
 	 			$output .= '<tr><td><b>Language</b></td><td><b>'.$item->pref_language.'</b></td></tr>';
 	 			$output .= '<tr><td><b>Date & Time</b></td><td><b>'.$item->cfm_wkshop_date.' &nbsp;'.$item->cfm_wkshop_time.'</b></td></tr>';
 

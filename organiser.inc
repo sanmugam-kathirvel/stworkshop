@@ -99,6 +99,23 @@
 			$query = "insert into organiser (academic_code,organiser_name,address,city,phone,organiser_id,status) values('".$form_state['values']['academic_code']."','".$form_state['values']['organiser_name']."', '".$form_state['values']['permanemt_address']."', '".$form_state['values']['city']."', '".$form_state['values']['phone']."', '".$user->uid."', 0)";
 			db_set_active('workshop_info');
 			if(db_query($query)){
+			    // send email to Resource person
+			    $tem = explode('-', $form_state['values']['academic_code']);
+			    $query = "select rp.rp_fname, u.mail from workshop_info.resource_person rp, CDEEP.users u where FIND_IN_SET('".$tem[0]."', rp.states) > 0 and rp.user_uid=u.uid";
+			    db_set_active('workshop_info');
+			    $result = db_query($query);
+			    $mailto = '';
+			    while($row = db_fetch_object($result)){
+				    $mailto .= $row->mail.',';
+			    }
+			    db_set_active('default');
+			    //$mailfrom = variable_get('site_mail');
+			    $subject = 'Invigilator Request';
+			    $message = "<p>Dear Resource-person,</p><p>".$user->name." made a new Organiser request from ".academic_center_name($form_state['values']['academic_code']).". To accept his request click <a href='http://spoken-tutorial.org/workshops/pending'>here<a></p>";
+			    //echo $mailto."<br><br>".$subject."<br><br>".$message; die;
+				workshops_notify($mailto, $subject, $message);
+				
+				
 				drupal_set_message('<p>Your request has been sent for Resource person\'s approval.<br>You will get the approval in 24 hours.</p>');
 				drupal_set_message('<p>Once the request is approved, you have to Request for the Workshop.<br>For the instructions <a href="http://process.spoken-tutorial.org/images/8/89/Workshop-Request-Sheet.pdf" style="font-size: 16px;"><b><i>Click Here</i></b></a></p>');
 			}else {
@@ -158,6 +175,15 @@
 			db_set_active('workshop_info');
 			if(db_query($query)){
 				db_set_active('default');
+				$query = "select mail from users where uid=".$row->organiser_id;
+			    $result = db_query($query);
+			    $organiser_email = db_fetch_object($result);
+			    $mailto = $organiser_email->mail;
+				$subject = 'Organiser Request Reject Notification';
+				$message = "<p>Dear ".$row->organiser_name.",</p><p>Your Organiser request has been rejected by our Resource Person.</p>";
+				//echo $mailto."<br><br>".$subject."<br><br>".$message; die;
+				workshops_notify($mailto, $subject, $message);
+				
 				drupal_set_message("Organiser request has been removed from list.");
 				drupal_goto($path = $base_url.'/workshops/college/list_pending_organisers', $query = NULL, $fragment = NULL, $http_response_code = 302);
 			}

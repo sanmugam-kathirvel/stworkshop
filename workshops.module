@@ -1,7 +1,7 @@
 <?php
 
 function workshops_perm() {
-	return array('Workshop Organiser Adding','Workshop Add New College', 'Workshop Get College', 'Workshop Admin List', 'Workshop Organiser College', 'Workshop Request', 'Workshop Request List', 'Test Request', 'Test Request List', 'Test Admin List', 'Workshop Detail', 'Feedback', 'ajax request', 'Academic Center', 'Edit Organiser Details', 'Report Public View', 'Workshop Invigilator Adding', 'Invigilate Test Request List', 'Workshop Completed List');
+	return array('Workshop Organiser Adding','Workshop Add New College', 'Workshop Get College', 'Workshop Admin List', 'Workshop Organiser College', 'Workshop Request', 'Workshop Request List', 'Test Request', 'Test Request List', 'Test Admin List', 'Workshop Detail', 'Feedback', 'ajax request', 'Academic Center', 'Edit Organiser Details', 'Report Public View', 'Workshop Invigilator Adding', 'Invigilate Test Request List', 'Workshop Completed List', 'Test Completed List');
 }
 
 function workshops_menu(){
@@ -18,7 +18,7 @@ function workshops_menu(){
 	);
 
 	$items['workshops/college'] = array(
-		'title' => 'College Details',
+		'title' => 'College/School Details',
    		'description' => 'college details',
    		'page callback' => 'drupal_get_form',
    		'page callback' => 'workshops_list_college_details',
@@ -35,7 +35,7 @@ function workshops_menu(){
 		'file' => 'add_resource_person.inc',
 	);
 	$items['workshops/college/add_college'] = array(
-		'title' => 'Add New College Details',
+		'title' => 'Add New College / School Details',
 		'description' => 'Adding new college details detail',
 		'page callback' => 'drupal_get_form',
 		'page arguments' => array('workshops_add_college_form'),
@@ -44,7 +44,7 @@ function workshops_menu(){
 		'file' => 'add_college.inc',
 	);
 	$items['workshops/college/edit_college'] = array(
-		'title' => 'Edit College Details',
+		'title' => 'Edit College / School Details',
 		'description' => 'Adding new college details detail',
 		'page callback' => 'drupal_get_form',
 		'page arguments' => array('workshops_edit_college_form'),
@@ -59,29 +59,57 @@ function workshops_menu(){
 		'type' => MENU_DEFAULT_LOCAL_TASK,
 		'file' => 'add_college.inc',
 	);
-	$items['workshops/college/list_organisers'] = array(
+	$items['workshops/college/list_school'] = array(
+		'title' => 'Listing School Details',
+		'page callback' => 'workshops_list_school_details',
+		'access arguments' => array('Workshop Add New College'),
+		'type' => MENU_LOCAL_TASK,
+		'file' => 'add_college.inc',
+	);
+	$items['workshops/members'] = array(
+		'title' => 'Organiser, Invigilatior Details',
+		'page callback' => 'drupal_get_form',
+   		'page callback' => 'workshops_list_organisers_detail',
+   		'access arguments' => array('Workshop Add New College'),
+   		'file' => 'add_college.inc'
+    );
+	$items['workshops/members/list_organisers'] = array(
 		'title' => 'Listing Organiser Details',
 		'page callback' => 'workshops_list_organisers_detail',
 		'access arguments' => array('Workshop Add New College'),
 		'type' => MENU_LOCAL_TASK,
 		'file' => 'add_college.inc',
 	);
-	$items['workshops/college/list_invigilators'] = array(
+	$items['workshops/members/list_invigilators'] = array(
 		'title' => 'Listing Invigilator Details',
 		'page callback' => 'workshops_list_invigilators_detail',
 		'access arguments' => array('Workshop Add New College'),
 		'type' => MENU_LOCAL_TASK,
 		'file' => 'add_college.inc',
 	);
+	$items['workshops/edit_invigilator'] = array(
+		'title' => 'Edit Invigilator Details',
+		'page callback' => 'workshops_edit_invigilator',
+		'access arguments' => array('Workshop Add New College'),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'invigilator.inc',
+	);
+	$items['workshops/view_invigilator'] = array(
+		'title' => 'Invigilator Details',
+		'page callback' => 'workshops_view_invigilator',
+		'access arguments' => array('Workshop Add New College'),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'invigilator.inc',
+	);
 	$items['workshops/pending'] = array(
-		'title' => 'Pending Requests',
+		'title' => 'New Requests',
 		'page callback' => 'drupal_get_form',
    		'page callback' => 'workshops_list_organiser_requests',
    		'access arguments' => array('Workshop Add New College'),
    		'file' => 'add_college.inc'
     );
 	$items['workshops/pending/list_pending_organisers'] = array(
-		'title' => 'Pending Organiser Requests',
+		'title' => 'New Organiser Requests',
 		'page callback' => 'workshops_list_organiser_requests',
 		'access arguments' => array('Workshop Add New College'),
 		'type' => MENU_DEFAULT_LOCAL_TASK,
@@ -120,7 +148,7 @@ function workshops_menu(){
 		'file' => 'add_college.inc',
 	);
 	$items['workshops/college/view_college'] = array(
-		'title' => 'College Details',
+		'title' => 'College / School Details',
 		'page callback' => 'workshops_view_college_details',
 		'access arguments' => array('Academic Center'),
 		'type' => MENU_NORMAL_ITEM,
@@ -208,7 +236,7 @@ function workshops_menu(){
 	$items['workshops/view_workshop'] = array(
 		'title' => 'Workshop Detail',
 		'page callback' => 'workshops_view_workshop',
-		'access arguments' => array('Workshop Request List'),
+		'access arguments' => array('Workshop Completed List'),
 		'type' => MENU_NORMAL_ITEM,
 		'file' => 'workshop_request.inc',
 	);
@@ -237,7 +265,7 @@ function workshops_menu(){
 	$items['workshops/list_test_completed'] = array(
 		'title' => 'Completed Assessment Tests',
 		'page callback' => 'workshops_list_test_completed',
-		'access arguments' => array('Test Request List'),
+		'access arguments' => array('Test Completed List'),
 		'type' => MENU_NORMAL_ITEM,
 		'file' => 'test_request.inc',
 	);
@@ -323,8 +351,22 @@ function workshops_menu(){
 		'access arguments' => array('ajax request'),
 		'type' => MENU_NORMAL_ITEM,
 	);
+	$items['workshops/resource_center_details'] = array(
+		'title' => 'Resource Centers List',
+		'page callback' => 'resource_center_details',
+		'access arguments' => array('Report Public View'),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'resource_center.inc',
+	);
+	$items['workshops/resource_center_view_college'] = array(
+		'title' => 'Resource Center Details',
+		'page callback' => 'resource_center_view_college_details',
+		'access arguments' => array('Report Public View'),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'resource_center.inc',
+	);
 	$items['workshops/academic_details'] = array(
-		'title' => 'Academic Details',
+		'title' => 'Academic Centers List',
 		'page callback' => 'academic_details',
 		'access arguments' => array('Academic Center'),
 		'type' => MENU_NORMAL_ITEM,
@@ -652,5 +694,13 @@ function get_feedback_detail(){
 		}
 	}
 
+    function academic_center_name($ac){
+	    $query = "select institution_name from academic_center where academic_code='".$ac."'";
+	    db_set_active('workshop_info');
+        $result = db_query($query);
+        db_set_active('default');
+        $row = db_fetch_object($result);
+        return $row->institution_name;
+	}
 
 ?>

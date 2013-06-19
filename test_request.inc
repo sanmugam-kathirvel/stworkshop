@@ -218,19 +218,18 @@
 		}
 		if(in_array('organiser', array_values($user->roles))) {
 			$header = array(
-				array('data'=>'FOSS Category', 'field'=>'tr.foss_category', 'sort'=>'asc'),
+				array('data'=>'FOSS Category', 'field'=>'tr.foss_category'),
 				array('data'=>'Academic Center Code', 'field'=>'tr.academic_code'),
 				array('data'=>'Department', 'field'=>'tr.department'),
-				array('data'=>'Preferred Date & Time', 'field'=>'tr.pref_test_date')
+				array('data'=>'Preferred Date & Time', 'field'=>'tr.pref_test_date', 'sort'=>'desc')
 			);
 		}
 		if(in_array('resource_person', array_values($user->roles))) {
 			$header = array(
-				array('data'=>'FOSS Category', 'field'=>'tr.foss_category', 'sort'=>'asc'),
+				array('data'=>'FOSS Category', 'field'=>'tr.foss_category'),
 				array('data'=>'Academic Center Code', 'field'=>'tr.academic_code'),
 				array('data'=>'Department', 'field'=>'tr.department'),
-				array('data'=>'Preferred Date & Time', 'field'=>'tr.pref_test_date'),
-				array('data'=>'')
+				array('data'=>'Preferred Date & Time', 'field'=>'tr.pref_test_date','sort'=>'desc')
 			);
 		}
 		$query .= tablesort_sql($header);
@@ -289,20 +288,19 @@
 		if(in_array('organiser', array_values($user->roles))) {
 			$header = array(
 				array('data'=>'Code', 'field'=>'id'),
-				array('data'=>'FOSS Category', 'field'=>'foss_category', 'sort'=>'asc'),
+				array('data'=>'FOSS Category', 'field'=>'foss_category'),
 				array('data'=>'Academic Center Code', 'field'=>'academic_code'),
-				array('data'=>'Date & Time', 'field'=>'cfm_test_date'),
+				array('data'=>'Date & Time', 'field'=>'cfm_test_date' , 'sort'=>'desc'),
 				array('data'=>'Status', 'field'=>'status')
 			);
 		}
 		if(in_array('resource_person', array_values($user->roles))) {
 			$header = array(
 				array('data'=>'Code', 'field'=>'id'),
-				array('data'=>'FOSS Category', 'field'=>'foss_category', 'sort'=>'asc'),
+				array('data'=>'FOSS Category', 'field'=>'foss_category'),
 				array('data'=>'Academic Center Code', 'field'=>'academic_code'),
-				array('data'=>'Date & Time', 'field'=>'cfm_test_date'),
-				array('data'=>'Status', 'field'=>'status'),
-				array('data'=>'')
+				array('data'=>'Date & Time', 'field'=>'cfm_test_date', 'sort'=>'desc'),
+				array('data'=>'Status', 'field'=>'status')
 			);
 		}
 		$query .= tablesort_sql($header);
@@ -365,10 +363,9 @@
 		}
 		$header = array(
 			array('data'=>'Code', 'field'=>'id'),
-			array('data'=>'FOSS', 'field'=>'foss_category', 'sort'=>'asc'),
+			array('data'=>'FOSS', 'field'=>'foss_category'),
 			array('data'=>'Academic Code', 'field'=>'academic_code'),
-			array('data'=>'Date & Time', 'field'=>'cfm_test_date'),
-			array('data'=>'')
+			array('data'=>'Date & Time', 'field'=>'cfm_test_date', 'sort'=>'desc')
 		);
 		$query .= tablesort_sql($header);
 		db_set_active('workshop_info');

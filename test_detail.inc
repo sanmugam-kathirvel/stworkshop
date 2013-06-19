@@ -20,12 +20,9 @@
 		);
 		
 		$form['batch_no'] = array(
-			'#type' => 'select',
-			'#title' => t('Batch Number'),
+			'#type' => 'hidden',
 			'#required' => TRUE,
-			'#validated' => TRUE,
-			'#options' => array('' => 'Select Batch Number'),
-			'#attributes' => array('class' => 'batch_no_fill')
+			'#value' => 1,
 		);
 		
 		$form['no_of_participants'] = array(

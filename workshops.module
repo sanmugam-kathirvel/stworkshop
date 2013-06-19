@@ -293,7 +293,7 @@ function workshops_menu(){
 	$items['workshops/test_view'] = array(
 		'title' => 'Assessment Test Approval Details',
 		'page callback' => 'workshops_test_view',
-		'access arguments' => array('Test Request List'),
+		'access arguments' => array('Test Completed List'),
 		'type' => MENU_NORMAL_ITEM,
 		'file' => 'test_request.inc',
 	);
@@ -304,13 +304,13 @@ function workshops_menu(){
 		'type' => MENU_NORMAL_ITEM,
 		'file' => 'test_request.inc',
 	);
-	/*$items['workshops/test_detail'] = array(
+	$items['workshops/test_detail'] = array(
 		'title' => 'Test admin details',
 		'page callback' => 'test_detail',
 		'access arguments' => array('Workshop Detail'),
 		'type' => MENU_NORMAL_ITEM,
 		'file' => 'test_detail.inc'
-	);*/
+	);
 	$items['workshops/workshop_detail'] = array(
 		'title' => 'Workshop details',
 		'page callback' => 'workshop_detail',

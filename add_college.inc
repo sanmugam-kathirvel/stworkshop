@@ -131,7 +131,7 @@ function workshops_add_college_form($form_state) {
 		'#title' => t('Resource center'),
 		'#options' => array(1 => 'Yes', 0 => 'No'),
 		'#required' => TRUE,
-		'#default_value' => 0,
+		'#default_value' => 1,
 		'#attributes' => array('class' => 'resource_center'),
 		'#prefix' => '<div class="skype-request">',
 		'#suffix' => '</div>'
@@ -150,7 +150,6 @@ function workshops_add_college_form($form_state) {
 		'#type' => 'textarea',
 		'#title' => t('Contact details'),
 		'#size' => 30,
-		'#required' => TRUE,
 		'#attributes' => array( 'rows' => '4', 'cols' => '30')
 	);
 	
@@ -158,7 +157,6 @@ function workshops_add_college_form($form_state) {
 		'#type' => 'textarea',
 		'#title' => t('Activities'),
 		'#size' => 30,
-		'#required' => TRUE,
 		'#attributes' => array( 'rows' => '4', 'cols' => '30'),
 		'#suffix' => '</div>'
 	);
@@ -189,6 +187,14 @@ function workshops_add_college_form_submit($form, &$form_state){
 function workshops_add_college_form_validate($form, &$form_state){
 	if (!preg_match('/^[0-9\ \+]{0,6}$/', $form_state['values']['pincode'])){
 		form_set_error('pincode', t('Invalid Pincode number'));
+	}
+	if($form_state['values']['resource_center'] == 1) {
+		if(trim($form_state['values']['contact_details']) == '') {
+			form_set_error('contact_details', t('Please fill contact details'));
+		}
+		if(trim($form_state['values']['remarks']) == '') {
+                        form_set_error('remarks', t('Please fill Activities field'));
+                }
 	}
   return;
 }
@@ -430,7 +436,6 @@ function workshops_edit_college_form($form_state, $id) {
 		'#type' => 'textarea',
 		'#title' => t('Contact details'),
 		'#size' => 30,
-		'#required' => TRUE,
 		'#value' => $item->contact_details,
 		'#attributes' => array( 'rows' => '4', 'cols' => '30')
 	);
@@ -439,7 +444,6 @@ function workshops_edit_college_form($form_state, $id) {
 		'#type' => 'textarea',
 		'#title' => t('Activities'),
 		'#size' => 30,
-		'#required' => TRUE,
 		'#value' => $item->remarks,
 		'#attributes' => array( 'rows' => '4', 'cols' => '30'),
 		'#suffix' => '</div>'
@@ -479,6 +483,16 @@ function workshops_edit_college_form_submit($form, &$form_state){
 	// exit;
 }
 
+function workshops_edit_form_validate($form, &$form_state) {
+	if($form_state['values']['resource_center'] == 1) {
+                if(trim($form_state['values']['contact_details']) == '') {
+                        form_set_error('resource_center', t('Please fill contact details'));
+                }
+                if(trim($form_state['values']['remarks']) == '') {
+                        form_set_error('remarks', t('Please fill Activities field'));
+                }
+        }
+}
 function workshops_view_college_details($id = NULL){
 	if($id){
 		$states_array = get_states(0);

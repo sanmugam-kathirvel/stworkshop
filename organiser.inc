@@ -110,7 +110,7 @@
 			    }
 			    db_set_active('default');
 			    //$mailfrom = variable_get('site_mail');
-			    $subject = 'Invigilator Request';
+			    $subject = 'Organiser Request';
 			    $message = "<p>Dear Resource-person,</p><p>".$user->name." made a new Organiser request from ".academic_center_name($form_state['values']['academic_code']).". To accept his request click <a href='http://spoken-tutorial.org/workshops/pending'>here<a></p>";
 			    //echo $mailto."<br><br>".$subject."<br><br>".$message; die;
 				workshops_notify($mailto, $subject, $message);

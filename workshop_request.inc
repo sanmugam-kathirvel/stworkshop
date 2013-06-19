@@ -250,7 +250,7 @@
 				array('data'=>'FOSS', 'field'=>'wr.foss_category'),
 				array('data'=>'Institution Name', 'field'=>'wr.institution_name'),
 				array('data'=>'Organiser', 'field'=>'o.organiser_name'),
-				array('data'=>'Workshop Date', 'field'=>'wr.pref_wkshop_date'),
+				array('data'=>'Workshop Date', 'field'=>'wr.pref_wkshop_date', 'sort'=>'desc'),
 			);
 		}
 		if(in_array('resource_person', array_values($user->roles))){
@@ -258,7 +258,7 @@
 				array('data'=>'FOSS', 'field'=>'wr.foss_category'),
 				array('data'=>'Institution Name', 'field'=>'wr.institution_name'),
 				array('data'=>'Organiser', 'field'=>'o.organiser_name'),
-				array('data'=>'Workshop Date', 'field'=>'wr.pref_wkshop_date'),
+				array('data'=>'Workshop Date', 'field'=>'wr.pref_wkshop_date', 'sort'=>'desc'),
 				array('data'=>'')
 			);
 		}
@@ -320,23 +320,22 @@
 		}
 		if(in_array('organiser', array_values($user->roles))){
 			$header = array(
-				array('data'=>'Workshop Code', 'field'=>'wr.workshop_code', 'sort'=>'asc'),
+				array('data'=>'Workshop Code', 'field'=>'wr.workshop_code'),
 				array('data'=>'FOSS', 'field'=>'wr.foss_category'),
 				array('data'=>'Academic Center Code', 'field'=>'wr.academic_code'),
-				array('data'=>'Date & Time', 'field'=>'wr.cfm_wkshop_date'),
+				array('data'=>'Date & Time', 'field'=>'wr.cfm_wkshop_date', 'sort'=>'desc'),
 				// array('data'=>'Department', 'field'=>'wr.department'),
 				array('data'=>'Organiser', 'field'=>'o.organiser_name')
 			);
 		}
 		if(in_array('resource_person', array_values($user->roles))){
 			$header = array(
-				array('data'=>'Workshop Code', 'field'=>'wr.workshop_code', 'sort'=>'asc'),
+				array('data'=>'Workshop Code', 'field'=>'wr.workshop_code'),
 				array('data'=>'FOSS', 'field'=>'wr.foss_category'),
 				array('data'=>'Academic Center Code', 'field'=>'wr.academic_code'),
-				array('data'=>'Date & Time', 'field'=>'wr.cfm_wkshop_date'),
+				array('data'=>'Date & Time', 'field'=>'wr.cfm_wkshop_date', 'sort'=>'desc'),
 				// array('data'=>'Department', 'field'=>'wr.department'),
-				array('data'=>'Organiser', 'field'=>'o.organiser_name'),
-				array('data'=>'')
+				array('data'=>'Organiser', 'field'=>'o.organiser_name')
 			);
 		}
 		$query .= tablesort_sql($header);
@@ -447,8 +446,7 @@
 			// array('data'=>'Language', 'field'=>'wr.pref_language'),
 			array('data'=>'Institution', 'field'=>'ac.institution_name'),
 			array('data'=>'State', 'field'=>'ac.state_code'),
-			array('data'=>'Date & Time', 'field'=>'wr.cfm_wkshop_date'),
-			array('data'=>'')
+			array('data'=>'Date & Time', 'field'=>'wr.cfm_wkshop_date')
 		);
 		$query .= tablesort_sql($header);
 		db_set_active('workshop_info');

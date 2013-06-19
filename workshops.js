@@ -1,7 +1,7 @@
 $(document).ready(function(){
-	webroot = 'http://'+location.hostname+'/spoken_tutorial_org/workshops/';
-	loading_image = "<img src='http://"+location.hostname+"/spoken_tutorial_org/ajax-loader.gif' />";
-	$('.resource_center_details').css({'display':'none'});
+	webroot = 'http://'+location.hostname+'/workshops/';
+	loading_image = "<img src='http://"+location.hostname+"/ajax-loader.gif' />";
+	tmp_disp = $('.resource_center').val();
 	$('#edit-resource-center-1').change(function(){
 		var disp_val = $(this).val();
 		if(disp_val == 1){

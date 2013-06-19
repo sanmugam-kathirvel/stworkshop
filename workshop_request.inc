@@ -446,7 +446,7 @@
 			// array('data'=>'Language', 'field'=>'wr.pref_language'),
 			array('data'=>'Institution', 'field'=>'ac.institution_name'),
 			array('data'=>'State', 'field'=>'ac.state_code'),
-			array('data'=>'Date & Time', 'field'=>'wr.cfm_wkshop_date')
+			array('data'=>'Date & Time', 'field'=>'wr.cfm_wkshop_date', 'sort'=>'desc')
 		);
 		$query .= tablesort_sql($header);
 		db_set_active('workshop_info');

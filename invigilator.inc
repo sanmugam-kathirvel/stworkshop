@@ -86,17 +86,121 @@
 				drupal_set_message('You already have an Invigilator permissions');
 			}
 		}else{
-			//print_r($form_state['values']);
+			
 			$query = "insert into invigilator (academic_code,invigilator_name,address,city,phone,invigilator_id,status) values('".$form_state['values']['academic_code']."','".$form_state['values']['invigilator_name']."', '".$form_state['values']['permanemt_address']."', '".$form_state['values']['city']."', '".$form_state['values']['phone']."', '".$user->uid."', 0)";
 			db_set_active('workshop_info');
 			if(db_query($query)){
+			    db_set_active('default');
+			    // send email to Resource person
+			    $tem = explode('-', $form_state['values']['academic_code']);
+			    $query = "select rp.rp_fname, u.mail from workshop_info.resource_person rp, CDEEP.users u where FIND_IN_SET('".$tem[0]."', rp.states) > 0 and rp.user_uid=u.uid";
+			    db_set_active('workshop_info');
+			    $result = db_query($query);
+			    $mailto = '';
+			    while($row = db_fetch_object($result)){
+				    $mailto .= $row->mail.',';
+			    }
+			    db_set_active('default');
+			    //$mailfrom = variable_get('site_mail');
+			    $subject = 'Invigilator Request';
+			    $message = "<p>Dear Resource-person,</p><p>".$user->name." made a new Invigilator request from ".academic_center_name($form_state['values']['academic_code']).". To accept his request click <a href='http://spoken-tutorial.org/workshops/pending/list_pending_invigilators'>here<a></p>";
+			    //echo $mailto."<br><br>".$subject."<br><br>".$message; die;
+				workshops_notify($mailto, $subject, $message);
 				drupal_set_message('Invigilator Details Added Successfully');
 				drupal_set_message('<p>Please note that Invigilator has to confirm acceptance to invigilate by clicking on <b>"Assessment Test Invigilator Confirmation"</b>.</p>');
 			}else {
+			    db_set_active('default');
 				drupal_set_message('Error Adding Invigilator Details');
 			}
-			db_set_active('default');
 		}
+	}
+	function workshops_edit_invigilator($id = NULL) {
+		if($id) {
+			return drupal_get_form('workshops_edit_invigilator_form', $id);
+		}else {
+			return "<center>Access Denied!</center>";
+		}
+	}
+	function workshops_edit_invigilator_form($form_state, $id){
+	
+		$states_array = get_states(0);
+		$query = "select inv.academic_code, inv.invigilator_name, inv.address, inv.city, inv.phone, ac.state_code, ac.institution_name, ac.street acstreet, ac.city as accity, ac.pincode as acpincode from invigilator inv, academic_center ac where inv.id=".$id." and ac.academic_code=inv.academic_code";
+		db_set_active('workshop_info');
+		$result = db_query($query);
+		$row = db_fetch_object($result);
+		db_set_active('default');
+		$output = '';
+		if($row) {
+			$output = '<table>';
+			$output .= '<tr><td><b>Academic Code</b></td><td>'.$row->academic_code.'</td></tr>';
+			$output .= '<tr><td><b>Institution Name</b></td><td>'.$row->institution_name.'</td></tr>';
+			$output .= '<tr><td><b>Address</b></td><td><p>'.$row->acstreet.'<br />'.$row->accity.'<br />'.$states_array[$row->state_code].' - '.$row->acpincode.'</p></td></tr>';
+			$output .= '</table>';
+		}
+	
+		$form['#prefix'] = '<div class="workshop-form">'.$output;
+		$form['#suffix'] = '</div>';
+		$form['#attributes'] = array('enctype' => "multipart/form-data");
+		
+		$form['invigilator_name'] = array(
+			'#type' => 'textfield',
+			'#title' => t('Invigilator Name'),
+			'#required' => TRUE,
+			'#value' => $row->invigilator_name,
+			'#attributes' => array('class' => 'invigilator_name')
+		);
+		$form['permanemt_address'] = array(
+			'#type' => 'textarea',
+			'#title' => t('Permanent Address'),
+			'#required' => TRUE,
+			'#value' => $row->address,
+			'#attributes' => array('class' => 'permanemt_address')
+		);
+		$form['city'] = array(
+			'#type' => 'textfield',
+			'#title' => t('City'),
+			'#required' => TRUE,
+			'#value' => $row->city,
+			'#attributes' => array('class' => 'city')
+		);
+		$form['phone'] = array(
+			'#type' => 'textfield',
+			'#title' => t('Phone'),
+			'#required' => TRUE,
+			'#value' => $row->phone,
+			'#attributes' => array('class' => 'phone')
+		);
+		$form['id'] = array(
+			'#type' => 'hidden',
+			'#value' => $id
+		);
+		$form['submit'] = array(
+			'#type' => 'submit',
+			'#value' => t('Submit')
+		);
+		
+		return $form;
+	}
+	function workshops_edit_invigilator_form_validate($form, &$form_state){
+		if (!preg_match('/^[0-9\ \+]{0,15}$/', $form_state['values']['phone'])){
+			form_set_error('phone', t('Invalid Phone number'));
+		}
+		
+  		return;
+
+	}
+	function workshops_edit_invigilator_form_submit($form, &$form_state){
+		global $user;
+		
+		$query = "update invigilator set invigilator_name='".$_POST['invigilator_name']."', address='".$_POST['permanemt_address']."', city='".$_POST['city']."', phone='".$_POST['phone']."' where id=".$_POST['id'];
+		db_set_active('workshop_info');
+		if(db_query($query)){
+			drupal_set_message('Invigilator Details Updated Successfully');
+			drupal_goto('workshops/members/list_invigilators');
+		}else {
+			drupal_set_message('Error Updating Invigilator Details');
+		}
+		db_set_active('default');
 	}
 	
 	function accept_invigilator($id = NULL){
@@ -116,7 +220,7 @@
 			db_query($query);
 			$query = "select mail from users where uid=".$row->invigilator_id;
 			$result = db_query($query);
-			$organiser_email = db_fetch_object($result);
+			$invigilator_email = db_fetch_object($result);
 			// change organiser status to active
 			$query = "update invigilator set status=1 where id=".$id;
 			// echo $query; die;
@@ -125,7 +229,7 @@
 				db_set_active('default');
 				// mail to Organiser
 				// $mailfrom = variable_get('site_mail');
-				$mailto = $organiser_email->mail;
+				$mailto = $invigilator_email->mail;
 				$subject = 'Account notification';
 				$message = "<p>Dear ".$row->invigilator_name.",</p><p>Thank you for registering at <a href='http://spoken-tutorial.org'>spoken-tutorial.org</a>. You are added as an invigilator for '".$row->institution_name."'.";
 
@@ -143,12 +247,57 @@
 		}
 	}
 	
+	function workshops_view_invigilator($id = NULL) {
+		if($id) {
+			$query = "select inv.academic_code, inv.invigilator_name, inv.address, inv.city, inv.phone, ac.state_code, ac.institution_name, ac.street acstreet, ac.city as accity, ac.pincode as acpincode from invigilator inv, academic_center ac where inv.id=".$id." and ac.academic_code=inv.academic_code";
+			db_set_active('workshop_info');
+			$result = db_query($query);
+			$row = db_fetch_object($result);
+			db_set_active('default');
+			$states_array = get_states(0);
+	 		if($row){
+	 			$output = '<table>';
+				$output .= '<tr><td><b>Academic Code</b></td><td>'.$row->academic_code.'</td></tr>';
+				$output .= '<tr><td><b>Institution Name</b></td><td>'.$row->institution_name.'</td></tr>';
+				$output .= '<tr><td><b>Location</b></td><td><p>'.$row->accity.'<br />'.$states_array[$row->state_code].' - '.$row->acpincode.'</p></td></tr>';
+				$output .= '<tr><td><b>Invigilator Name</b></td><td>'.$row->invigilator_name.'</td></tr>';
+				$output .= '<tr><td><b>Permanent Address</b></td><td>'.str_replace("\n", "<br />", $row->address).'</td></tr>';
+				$output .= '<tr><td><b>Phone number</b></td><td>'.$row->phone.'</td></tr>';
+				$output .= '</table>';
+
+	 			return $output;
+	 		}else {
+	 			drupal_set_message('Error accessing database workshop_info');
+	 		}
+		}else {
+			return "<center>Something went wrong, please try again later.</center>";
+		}
+	}
+	
 	function reject_invigilator($id = NULL){
 		if($id){
+			$query = "select u.mail, inv.invigilator_name from workshop_info.invigilator inv, CDEEP.users u where u.uid=inv.invigilator_id and inv.id=".$id;
+			$result = db_query($query);
+			$row = db_fetch_object($result);
+			$mailto = $invigilator_email->mail;
+			$subject = 'Registration reject notification';
+			$message = "<p>Dear ".$row->invigilator_name.",</p><p> Your Invigilator request has been rejected by Resource Person</p>";
+			workshops_notify($mailto, $subject, $message);
+
 			$query = "delete from invigilator where id=".$id;
 			db_set_active('workshop_info');
 			if(db_query($query)){
 				db_set_active('default');
+				// mail to Organiser
+				$query = "select mail from users where uid=".$row->invigilator_id;
+			    $result = db_query($query);
+			    $invigilator_email = db_fetch_object($result);
+				$mailto = $invigilator_email->mail;
+				$subject = 'Invigilator Request Reject Notification';
+				$message = "<p>Dear ".$row->invigilator_name.",</p><p>Your invigilator request has been rejected by Resource persons.</p>";
+				//echo $mailto."<br><br>".$subject."<br><br>".$message; die;
+				workshops_notify($mailto, $subject, $message);
+				
 				drupal_set_message("Invigilator request has been removed from list.");
 				drupal_goto($path = $base_url.'/workshops/college/list_pending_invigilators', $query = NULL, $fragment = NULL, $http_response_code = 302);
 			}
@@ -253,6 +402,32 @@
 			db_set_active('default');
 			if($result) {
 				drupal_set_message('Test request confirmed.');
+				
+				//email to organiser
+				$query = "select test_code, tr.cfm_test_date, tr.cfm_test_time, tr.foss_category, tr.organiser_id, tr.invigilator_id from academic_center ac, test_requests tr where tr.academic_code=ac.academic_code and tr.id=".$id;
+		        db_set_active('workshop_info');
+		
+		        db_set_active('default');
+			    drupal_set_message('Test Confirm Details Added Successfully');
+			    $data = db_fetch_object($result);
+
+			    // send email to Organiser
+			    $query = "select name, mail from users where uid='".$data->organiser_id."'";
+			    $result = db_query($query);
+			    $row = db_fetch_object($result);
+			    $mailto = $row->mail;
+			    //$mailfrom = variable_get('site_mail');
+			    $subject = 'Test confirmation notification';
+			    $message = "<p>Dear ".$row->name.",</p><p> Your new Test request has been approved</p>";
+			    $message .= "<table><tr><td>Institution Name</td><td>: ".$data->institution_name."</td></tr>";
+			    $message .= "<tr><td>Department</td><td>: ".$data->department."</td></tr>";
+			    $message .= "<tr><td>Foss Category </td><td>: ".$data->foss_category ."</td></tr>";
+			    $message .= "<tr><td>Test Code </td><td>: ".$data->test_code ."</td></tr>";
+			    $message .= "<tr><td>Test date & time</td><td>: ".$data->cfm_test_date."  ".$data->cfm_test_time."</td></tr></table>";
+			    $message .=  "Please go through the Test Instructions for the participants so that you can guide them properly on the day of the test";
+			    //echo $mailto."<br><br>".$subject."<br><br>".$message;
+			    workshops_notify( $mailto, $subject, $message);
+
 			}
 			drupal_goto('workshops/invigilate_pending_test_requests');
 		}else{
@@ -265,14 +440,14 @@
 		$query = "";
 		$count_query = "";
 		
-		$query = "select tr.id, tr.test_code, tr.academic_code, tr.department, tr.cfm_test_date, tr.cfm_test_time, tr.foss_category, tr.status from test_requests tr where tr.invigilator_id=".$user->uid." and tr.status>1 and tr.status<4 and tr.cfm_test_date='".date('Y-m-d')."'";
-		$count_query = "select count(id) from test_requests tr where tr.invigilator_id=".$user->uid." and tr.status>1 and tr.status<4 and tr.cfm_test_date='".date('Y-m-d')."'";
+		$query = "select tr.id, tr.test_code,"./*" tr.department,".*/" tr.cfm_test_date, tr.cfm_test_time, tr.foss_category, tr.status, ac.institution_name from test_requests tr, academic_center ac where tr.invigilator_id=".$user->uid." and tr.status>1 and tr.status<4 and tr.cfm_test_date='".date('Y-m-d')."' and ac.academic_code=tr.academic_code";
+		$count_query = "select count(id) from test_requests tr where tr.invigilator_id=".$user->uid." and tr.status>1 and tr.status<4 and tr.cfm_test_date='".date('Y-m-d')."' and ac.academic_code=tr.academic_code";
 		
 		// $header = array('Test Code', 'Academic Code', 'Department', 'FOSS Category', 'Date & Time', '');
 		$header = array(
 			array('data'=>'Test Code', 'field'=>'tr.id', 'sort'=>'asc'),
-			array('data'=>'Academic Code', 'field'=>'tr.academic_code'),
-			array('data'=>'Department', 'field'=>'tr.department'),
+			array('data'=>'Institution', 'field'=>'tr.institution_name'),
+			// array('data'=>'Department', 'field'=>'tr.department'),
 			array('data'=>'FOSS Category', 'field'=>'tr.foss_category'),
 			array('data'=>'Date & Time', 'field'=>'tr.cfm_test_date'),
 			array('data'=>'')
@@ -292,7 +467,7 @@
 				$caption_string = 'Edit';
 				$caption_description = 'Edit the attendance form';
 			}
-			$row[] = array($item->test_code, $item->academic_code, $item->department, $item->foss_category, $item->cfm_test_date." ".$item->cfm_test_time, l($caption_string, 'workshops/invigilate_fill_test_attendance/'. $item->id, array('attributes' => array('title' => $caption_description))));
+			$row[] = array($item->test_code, $item->institution_name, /*$item->department, */$item->foss_category, $item->cfm_test_date." ".$item->cfm_test_time, l($caption_string, 'workshops/invigilate_fill_test_attendance/'. $item->id, array('attributes' => array('title' => $caption_description))));
 		}
 		if (count($row) == 0) {
 			$output .= '<div style="color:red;text-align:center;">List is empty.</div>';
@@ -314,9 +489,9 @@
 			$output = '';
 			if($row = db_fetch_object($result)){
 				$output = '<form method="post" action="'.base_path().'workshops/save_attendance">
-								<table border="0" cellpadding ="30" cellspacing="30" align="left" style="width: 70%; margin-bottom: 20px; margin-top: 10px; margin-left: 20px;">';
-				$output .= '<tr><td><b>Test code</b> &nbsp;&nbsp;&nbsp;&nbsp; <b>:</b> '.$row->test_code.'</td><td><b>Academic code</b>&nbsp;<b>:</b> '.$row->academic_code.'</td></tr>';
-				$output .= '<tr><td><b>Department</b>&nbsp;<b>:</b> '.$row->department.'</td><td><b>FOSS category</b>&nbsp;<b>:</b> '.$row->foss_category.'</td></tr>';
+								<table border="0" cellpadding ="30" cellspacing="30" align="left" style="width: 100%; margin-bottom: 20px; margin-top: 10px; margin-left: 20px;">';
+				$output .= '<tr><td><b>Test code</b> &nbsp;&nbsp;&nbsp;&nbsp; <b>:</b> </td><td>'.$row->test_code.'</td><td><b>Academic code</b>&nbsp;<b>:</b> </td><td>'.$row->academic_code.'</td></tr>';
+				$output .= '<tr><td><b>Department</b>&nbsp;<b>:</b> </td><td>'.$row->department.'</td><td><b>FOSS category</b>&nbsp;<b>:</b> </td><td>'.$row->foss_category.'</td></tr>';
 				$output .= '</table><br><br>';
 				
 				$query = "select ar.id, ar.status, mu.id, mu.username, mu.picture, mu.firstname, mu.lastname, mu.institution from workshop_info.attendance_register ar, OTC.mdl_user mu where ar.test_code='".$row->test_code."' and mu.id=ar.moodle_uid";

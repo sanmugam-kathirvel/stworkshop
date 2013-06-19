@@ -174,7 +174,7 @@
 			//$mailfrom = variable_get('site_mail');
 			$subject = 'Test Request Notification';
 			$message = "<p>Dear Resource-person,</p><p>".$user->name." made a new Test request.</p><p><b>Test Details</b></p><p>Foss category : ".$form_state['values']['foss_category']."</p><p>Preferred Test Date : ".$pref_test_date."</p><p>Preferred Test Time : ".$pref_test_time."</p>";
-			
+			//echo $mailto."<br><br>".$subject."<br><br>".$message; die;
 			workshops_notify($mailto, $subject, $message);
 			
 			drupal_set_message('Test Request Added Successfully');
@@ -218,19 +218,18 @@
 		}
 		if(in_array('organiser', array_values($user->roles))) {
 			$header = array(
-				array('data'=>'FOSS Category', 'field'=>'tr.foss_category', 'sort'=>'asc'),
+				array('data'=>'FOSS Category', 'field'=>'tr.foss_category'),
 				array('data'=>'Academic Center Code', 'field'=>'tr.academic_code'),
 				array('data'=>'Department', 'field'=>'tr.department'),
-				array('data'=>'Preferred Date & Time', 'field'=>'tr.pref_test_date')
+				array('data'=>'Preferred Date & Time', 'field'=>'tr.pref_test_date', 'sort'=>'desc')
 			);
 		}
 		if(in_array('resource_person', array_values($user->roles))) {
 			$header = array(
-				array('data'=>'FOSS Category', 'field'=>'tr.foss_category', 'sort'=>'asc'),
+				array('data'=>'FOSS Category', 'field'=>'tr.foss_category'),
 				array('data'=>'Academic Center Code', 'field'=>'tr.academic_code'),
 				array('data'=>'Department', 'field'=>'tr.department'),
-				array('data'=>'Preferred Date & Time', 'field'=>'tr.pref_test_date'),
-				array('data'=>'')
+				array('data'=>'Preferred Date & Time', 'field'=>'tr.pref_test_date','sort'=>'desc')
 			);
 		}
 		$query .= tablesort_sql($header);
@@ -289,20 +288,19 @@
 		if(in_array('organiser', array_values($user->roles))) {
 			$header = array(
 				array('data'=>'Code', 'field'=>'id'),
-				array('data'=>'FOSS Category', 'field'=>'foss_category', 'sort'=>'asc'),
+				array('data'=>'FOSS Category', 'field'=>'foss_category'),
 				array('data'=>'Academic Center Code', 'field'=>'academic_code'),
-				array('data'=>'Date & Time', 'field'=>'cfm_test_date'),
+				array('data'=>'Date & Time', 'field'=>'cfm_test_date' , 'sort'=>'desc'),
 				array('data'=>'Status', 'field'=>'status')
 			);
 		}
 		if(in_array('resource_person', array_values($user->roles))) {
 			$header = array(
 				array('data'=>'Code', 'field'=>'id'),
-				array('data'=>'FOSS Category', 'field'=>'foss_category', 'sort'=>'asc'),
+				array('data'=>'FOSS Category', 'field'=>'foss_category'),
 				array('data'=>'Academic Center Code', 'field'=>'academic_code'),
-				array('data'=>'Date & Time', 'field'=>'cfm_test_date'),
-				array('data'=>'Status', 'field'=>'status'),
-				array('data'=>'')
+				array('data'=>'Date & Time', 'field'=>'cfm_test_date', 'sort'=>'desc'),
+				array('data'=>'Status', 'field'=>'status')
 			);
 		}
 		$query .= tablesort_sql($header);
@@ -365,10 +363,9 @@
 		}
 		$header = array(
 			array('data'=>'Code', 'field'=>'id'),
-			array('data'=>'FOSS', 'field'=>'foss_category', 'sort'=>'asc'),
+			array('data'=>'FOSS', 'field'=>'foss_category'),
 			array('data'=>'Academic Code', 'field'=>'academic_code'),
-			array('data'=>'Date & Time', 'field'=>'cfm_test_date'),
-			array('data'=>'')
+			array('data'=>'Date & Time', 'field'=>'cfm_test_date', 'sort'=>'desc')
 		);
 		$query .= tablesort_sql($header);
 		db_set_active('workshop_info');
@@ -403,7 +400,7 @@
 			$output .= '<tr><td>FOSS Category</td><td>: '.$item->foss_category.'</td></tr>';
 			$output .= '<tr><td>Preferred Date & Time</td><td>: '.$item->pref_test_date.' '.$item->pref_test_time.'</td></tr>';
 			$output .= '</table></div>';
-			$output .= drupal_get_form('workshops_test_confirm_form', $id, $item->pref_test_date, $item->pref_test_time, $item->organiser_id);
+			$output .= drupal_get_form('workshops_test_confirm_form', $id, $item->pref_test_date, $item->pref_test_time);
 			return $output;
 		}else{
 			return "<p>Sorry, no data found.</p>";
@@ -424,7 +421,7 @@
 		}
 	}
 
-	function workshops_test_confirm_form($form_state, $id, $date_val, $time_val, $oid){
+	function workshops_test_confirm_form($form_state, $id, $date_val, $time_val){
   $path = drupal_get_path('module', 'workshops');
 		drupal_add_js($path . '/datepickr.js');
 		drupal_add_css($path . '/datepickr.css');
@@ -458,10 +455,6 @@
 		$form['id'] = array(
 			'#type' => 'hidden',
 			'#value' => $id,
-		);
-		$form['oid'] = array(
-			'#type' => 'hidden',
-			'#value' => $oid,
 		);
 		$form['cfm_test_date'] = array(
 			'#type' => 'textfield',
@@ -507,27 +500,41 @@
 		$cfm_test_time = $_POST['cfm_test_time'].':'.$_POST['cfm_test_minute'].':00';
 		$test_code = 'TC-'.$form_state['values']['id'];
 		$query = "update {test_requests} set test_code='".$test_code."', cfm_test_date='".$cfm_test_date."', cfm_test_time='".$cfm_test_time."', status=1 where id=".$form_state['values']['id'];
+		db_query($query);
+		$query = "select ac.institution_name, tr.department, tr.cfm_test_date, tr.cfm_test_time, tr.foss_category, tr.organiser_id, tr.invigilator_id from academic_center ac, test_requests tr where tr.academic_code=ac.academic_code and tr.id=".$_POST['id'];
 		db_set_active('workshop_info');
-		if(db_query($query)){
+		if($result = db_query($query)){
+		    db_set_active('default');
 			drupal_set_message('Test Confirm Details Added Successfully');
-			// mail to Resorce Person
+			$data = db_fetch_object($result);
 
-			//$mailfrom = variable_get('site_mail');
-			$mailto = $user->mail;
-			$subject = 'Test confirmation Notification';
-			$message = "<p>Dear ".$user->name.",</p><p>Test ".$test_code." has been approved.</p>";
-			workshops_notify( $mailto, $subject, $message);
-			
-			
 			// send email to Organiser
-			$query = "select name, mail from users where uid='".$_POST['oid']."'";
+			$query = "select name, mail from users where uid='".$data->organiser_id."'";
 			$result = db_query($query);
 			$row = db_fetch_object($result);
 			$mailto = $row->mail;
 			//$mailfrom = variable_get('site_mail');
-			$subject = 'Test confirmation Notification';
-			$message = "<p>Dear ".$row->organiser_name.",</p><p> Your new Test request has has been confirmed.</p><p><b>Test Details</b></p><p>Test code : ".$test_code."</p><p>Confirmed Test Date : ".$cfm_test_date."</p><p>Confirmed Test Time : ".$cfm_test_time."</p>";
+			$subject = 'Test request waiting for Invigilator acceptance';
+			$message = "<p>Dear ".$row->name.",</p><p> Your new Test request has been approved by Resource person. Now it is  waiting for invigilator's acceptance. Once it accepted, you will receive a test comfirmation email.</p>";
+			echo $mailto."<br><br>".$subject."<br><br>".$message;
 			workshops_notify( $mailto, $subject, $message);
+			
+			// send email to Invigilator
+			$query = "select name, mail from users where uid='".$data->invigilator_id."'";
+			$result = db_query($query);
+			$row = db_fetch_object($result);
+			$mailto = $row->mail;
+			//$mailfrom = variable_get('site_mail');
+			$subject = 'Test request waiting for your approval';
+			$message = "<p>Dear ".$row->name.",</p><p>The following test is waiting for your acceptance,  </p>";
+			$message .= "<table><tr><td>Institution Name</td><td>: ".$data->institution_name."</td></tr>";
+			$message .= "<tr><td>Department</td><td>: ".$data->department."</td></tr>";
+			$message .= "<tr><td>Foss Category </td><td>: ".$data->foss_category ."</td></tr>";
+			$message .= "<tr><td>Test date & time</td><td>: ".$data->cfm_test_date."  ".$data->cfm_test_time."</td></tr></table>";
+			$message .= "<p>Please use the following URL to accept/reject, http://spoken-tutorial.org/workshops/invigilate_pending_test_requests</p>";
+			echo $mailto."<br><br>".$subject."<br><br>".$message;
+			workshops_notify( $mailto, $subject, $message);
+
 			drupal_goto($path = 'workshops/list_test_request', $query = NULL, $fragment = NULL, $http_response_code = 302);
 		}else {
 			drupal_set_message('Error Adding Test Confirm Details');
@@ -676,25 +683,38 @@
 		$cfm_test_time = $_POST['cfm_test_time'].':'.$_POST['cfm_test_minute'].':00';
 		$query = "update {test_requests} set cfm_test_date='".$cfm_test_date."', cfm_test_time='".$cfm_test_time."', status=1 where id=".$form_state['values']['id'];
 		db_set_active('workshop_info');
-		if(db_query($query)){
-		
-		// mail to Resorce Person
-
-			//$mailfrom = variable_get('site_mail');
-			/*$mailto = $user->mail;
-			$subject = 'Workshop confirmation Notification';
-			$message = "<p>Dear ".$user->name.",</p><p>Online test TC-".$_POST['id']." has been updated.</p>";
-			workshops_notify($mailto, $subject, $message);*/
+		db_query($query);
+		db_set_active('default');
+		$query = "select ac.institution_name, tr.department, tr.cfm_test_date, tr.cfm_test_time, tr.foss_category, tr.organiser_id, tr.invigilator_id from academic_center ac, test_requests tr where tr.academic_code=ac.academic_code and tr.id=".$_POST['id'];
+		if(db_query($query)){		
 			// send email to Organiser
-			db_set_active('default');
-			$query = "select name, mail from users where uid='".$_POST['oid']."'";
+			$query = "select name, mail from users where uid='".$data->organiser_id."'";
 			$result = db_query($query);
 			$row = db_fetch_object($result);
 			$mailto = $row->mail;
 			//$mailfrom = variable_get('site_mail');
-			$subject = 'Test confirmation Notification';
-			$message = "<p>Dear ".$row->name.",</p><p> Your online test TC-".$_POST['id']." has has been postponded.</p><p><b>Test Details</b></p><p>Confirmed Test Date : ".$cfm_test_date."</p><p>Confirmed Test Time : ".$cfm_test_time."</p>";
-			workshops_notify($mailto, $subject, $message);
+			$subject = 'Test request waiting for Invigilator acceptance';
+			$message = "<p>Dear ".$row->name.",</p><p> Your new Test request has been approved by Resource person. Now it is  waiting for invigilator's acceptance. Once it accepted, you will receive a test comfirmation email.</p>";
+			echo $mailto."<br><br>".$subject."<br><br>".$message;
+			workshops_notify( $mailto, $subject, $message);
+			
+			// send email to Invigilator
+			$query = "select name, mail from users where uid='".$data->invigilator_id."'";
+			$result = db_query($query);
+			$row = db_fetch_object($result);
+			$mailto = $row->mail;
+			//$mailfrom = variable_get('site_mail');
+			$subject = 'Test request waiting for your approval';
+			$message = "<p>Dear ".$row->name.",</p><p>The following test is waiting for your acceptance,  </p>";
+			$message .= "<table><tr><td>Institution Name</td><td>: ".$data->institution_name."</td></tr>";
+			$message .= "<tr><td>Department</td><td>: ".$data->department."</td></tr>";
+			$message .= "<tr><td>Foss Category </td><td>: ".$data->foss_category ."</td></tr>";
+			$message .= "<tr><td>Test date & time</td><td>: ".$data->cfm_test_date."  ".$data->cfm_test_time."</td></tr></table>";
+			$message .= "<p>Please use the following URL to accept/reject, http://spoken-tutorial.org/workshops/invigilate_pending_test_requests</p>";
+			echo $mailto."<br><br>".$subject."<br><br>".$message;
+			workshops_notify( $mailto, $subject, $message);
+
+
 			drupal_set_message('Test Confirmation Added Successfully');
 			drupal_goto($path = 'workshops/list_test_approval', $query = NULL, $fragment = NULL, $http_response_code = 302);
 		}else {

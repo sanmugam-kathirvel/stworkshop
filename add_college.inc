@@ -84,7 +84,17 @@ function workshops_add_college_form($form_state) {
 		'#prefix' => '<div class="coll_academic_code_div">',
 		'#suffix' => '</div>'
 	);
-
+	
+	$form['school_college'] = array(
+		'#type' => 'radios',
+		'#title' => t('College / school'),
+		'#options' => array(1 => 'College', 0 => 'School'),
+		'#required' => TRUE,
+		'#default_value' => 1,
+		'#prefix' => '<div class="skype-request">',
+		'#suffix' => '</div>'
+	);
+	
 	$form['college_name'] = array(
 		'#type' => 'textfield',
 		'#title' => t('Institution Name'),
@@ -116,6 +126,41 @@ function workshops_add_college_form($form_state) {
 		'#required' => TRUE,
 	);
 	
+	$form['resource_center'] = array(
+		'#type' => 'radios',
+		'#title' => t('Resource center'),
+		'#options' => array(1 => 'Yes', 0 => 'No'),
+		'#required' => TRUE,
+		'#default_value' => 1,
+		'#attributes' => array('class' => 'resource_center'),
+		'#prefix' => '<div class="skype-request">',
+		'#suffix' => '</div>'
+	);
+	
+	$form['star_rating'] = array(
+		'#type' => 'select',
+		'#title' => t('Star Rating'),
+		'#required' => TRUE,
+		'#options' => array(0 => '0', 1 => '1', 2 => '2', 3 => '3', 4 => '4', 5 => '5'),
+		'#attributes' => array('class' => 'college_state'),
+		'#prefix' => '<div class="resource_center_details">'
+	);
+	
+	$form['contact_details'] = array(
+		'#type' => 'textarea',
+		'#title' => t('Contact details'),
+		'#size' => 30,
+		'#attributes' => array( 'rows' => '4', 'cols' => '30')
+	);
+	
+	$form['remarks'] = array(
+		'#type' => 'textarea',
+		'#title' => t('Activities'),
+		'#size' => 30,
+		'#attributes' => array( 'rows' => '4', 'cols' => '30'),
+		'#suffix' => '</div>'
+	);
+	
 	$form['submit'] = array(
 		'#type' => 'submit',
 		'#value' => t('Submit')
@@ -126,8 +171,8 @@ function workshops_add_college_form($form_state) {
 
 function workshops_add_college_form_submit($form, &$form_state){
 	global $user;
-	$query = "insert into academic_center values('', '".$form_state['values']['state']."', '".$form_state['values']['academic_code']."', '".db_escape_string(trim($form_state['values']['college_name']));
-	$query .= "', '".db_escape_string(trim($form_state['values']['street']))."', '".db_escape_string(trim($form_state['values']['city']))."', '".trim($form_state['values']['pincode'])."')";
+	$query = "insert into academic_center values('', '".$form_state['values']['state']."', '".$form_state['values']['academic_code']."', ".$form_state['values']['school_college'].", '".db_escape_string(trim($form_state['values']['college_name']));
+	$query .= "', '".db_escape_string(trim($form_state['values']['street']))."', '".db_escape_string(trim($form_state['values']['city']))."', '".trim($form_state['values']['pincode'])."', ".$form_state['values']['resource_center'].", ".$form_state['values']['star_rating'].", '".$form_state['values']['contact_details']."', '".$form_state['values']['remarks']."')";
 	db_set_active('workshop_info');
 	if(db_query($query)){
 		drupal_set_message('College Details Added Successfully');
@@ -143,14 +188,54 @@ function workshops_add_college_form_validate($form, &$form_state){
 	if (!preg_match('/^[0-9\ \+]{0,6}$/', $form_state['values']['pincode'])){
 		form_set_error('pincode', t('Invalid Pincode number'));
 	}
+	if($form_state['values']['resource_center'] == 1) {
+		if(trim($form_state['values']['contact_details']) == '') {
+			form_set_error('contact_details', t('Please fill contact details'));
+		}
+		if(trim($form_state['values']['remarks']) == '') {
+                        form_set_error('remarks', t('Please fill Activities field'));
+                }
+	}
   return;
 }
 
 function workshops_list_college_details(){
 	global $user;
 	
-	$query = "SELECT ac.id, ac.academic_code, ac.institution_name, ac.city, rp.states FROM `academic_center` ac, resource_person rp WHERE rp.user_uid='".$user->uid."' and FIND_IN_SET(ac.state_code, rp.states) > 0";
-	$count_query = "SELECT count(ac.id) FROM `academic_center` ac, resource_person rp WHERE rp.user_uid='".$user->uid."' and FIND_IN_SET(ac.state_code, rp.states) > 0";
+	$query = "SELECT ac.id, ac.academic_code, ac.institution_name, ac.city, rp.states FROM `academic_center` ac, resource_person rp WHERE ac.school_college=1 and rp.user_uid='".$user->uid."' and FIND_IN_SET(ac.state_code, rp.states) > 0";
+	$count_query = "SELECT count(ac.id) FROM `academic_center` ac, resource_person rp WHERE ac.school_college=1 and rp.user_uid='".$user->uid."' and FIND_IN_SET(ac.state_code, rp.states) > 0";
+
+	$header = array(
+		array('data'=>'Academic Center Code', 'field'=>'ac.academic_code', 'sort'=>'asc'),
+		array('data'=>'Institution', 'field'=>'ac.institution_name'),
+		array('data'=>'City', 'field'=>'ac.city'),
+		array('data'=>'Action')
+	);
+
+	$query .= tablesort_sql($header);
+	db_set_active('workshop_info');
+	$result = pager_query($query , 30, 0, $count_query);
+	db_set_active('default');
+	$row = array();
+	
+	while ($item = db_fetch_object($result)) {
+		$row[] = array($item->academic_code, $item->institution_name, $item->city, l(t('Edit'), 'workshops/college/edit_college/'. $item->id , array('attributes' => array('class' => 'edit-record', 'title' => 'Edit')))." ".l(t('View'), 'workshops/college/view_college/'. $item->id , array('attributes' => array('class' => 'view-record', 'title' => 'View'))));
+	}
+	if (count($row) == 0) {
+		$output .= '<div style="color:red;text-align:center;">List is empty.</div>';
+	} else {
+		drupal_set_message($message);
+		$output .= theme_table($header,$row);
+		$output .= theme_pager(null, 30);
+	}
+	return $output;
+}
+
+function workshops_list_school_details(){
+	global $user;
+	
+	$query = "SELECT ac.id, ac.academic_code, ac.institution_name, ac.city, rp.states FROM `academic_center` ac, resource_person rp WHERE ac.school_college=0 and rp.user_uid='".$user->uid."' and FIND_IN_SET(ac.state_code, rp.states) > 0";
+	$count_query = "SELECT count(ac.id) FROM `academic_center` ac, resource_person rp WHERE ac.school_college=0 rp.user_uid='".$user->uid."' and FIND_IN_SET(ac.state_code, rp.states) > 0";
 
 	$header = array(
 		array('data'=>'Academic Center Code', 'field'=>'ac.academic_code', 'sort'=>'asc'),
@@ -215,15 +300,15 @@ function workshops_list_invigilators_detail(){
 	global $user;
 	global $base_url;
 	
-	$query = "SELECT o.academic_code, o.invigilator_name, o.address, o.city, o.phone FROM invigilator o WHERE o.academic_code IN (SELECT ac.`academic_code` FROM `academic_center` ac, resource_person rp WHERE rp.user_uid='".$user->uid."' and FIND_IN_SET(ac.state_code, rp.states) > 0) and o.status=1";
+	$query = "SELECT o.id, o.academic_code, o.invigilator_name, o.address, o.city, o.phone FROM invigilator o WHERE o.academic_code IN (SELECT ac.`academic_code` FROM `academic_center` ac, resource_person rp WHERE rp.user_uid='".$user->uid."' and FIND_IN_SET(ac.state_code, rp.states) > 0) and o.status=1";
 	$count_query = "SELECT count(*) FROM invigilator o WHERE o.academic_code IN (SELECT ac.`academic_code` FROM `academic_center` ac, resource_person rp WHERE rp.user_uid='".$user->uid."' and FIND_IN_SET(ac.state_code, rp.states) > 0) and o.status=1 ORDER BY o.academic_code ASC";
 	// $header = array('', 'Academic Center Code', 'Name', 'Address', 'City', 'Phone');
 	$header =array(
 		array('data'=>'Academic Center Code', 'field'=>'o.academic_code', 'sort'=>'asc'),
 		array('data'=>'Name', 'field'=>'o.invigilator_name'),
-		array('data'=>'Address', 'field'=>'o.address'),
 		array('data'=>'City', 'field'=>'o.city'),
 		array('data'=>'Phone', 'field'=>'o.phone'),
+		array('data'=>'Action'),
 	);
 	$query .= tablesort_sql($header);
 	db_set_active('workshop_info');
@@ -231,7 +316,7 @@ function workshops_list_invigilators_detail(){
 	db_set_active('default');
 	$row = array();
 	while ($item = db_fetch_object($result)) {
-		$row[] = array($item->academic_code, $item->invigilator_name, $item->address, $item->city, $item->phone);
+		$row[] = array($item->academic_code, $item->invigilator_name, $item->city, $item->phone, l(t('Edit'), 'workshops/edit_invigilator/'. $item->id , array('attributes' => array('class' => 'edit-record', 'title' => 'Edit')))." ".l(t('View'), 'workshops/view_invigilator/'. $item->id , array('attributes' => array('class' => 'view-record', 'title' => 'View'))));
 	}
 	if (count($row) == 0) {
 		$output .= '<div style="color:red;text-align:center;">List is empty.</div>';
@@ -245,8 +330,8 @@ function workshops_list_invigilators_detail(){
 
 function workshops_edit_college_form($form_state, $id) {
 
-	//$path = drupal_get_path('module', 'workshops');
-	//drupal_add_js($path . '/workshops.js', 'module');
+	// $path = drupal_get_path('module', 'workshops');
+	// drupal_add_js($path . '/workshops.js', 'module');
 
 	global $user;
 	
@@ -259,6 +344,8 @@ function workshops_edit_college_form($form_state, $id) {
 	db_set_active('default');
 	
 	$item = db_fetch_object($result);
+	$form['#prefix'] = '<div class="workshop-form">';
+	$form['#suffix'] = '</div>';
 	$form['#attributes'] = array('enctype' => "multipart/form-data");
 
 	$form['state'] = array(
@@ -278,7 +365,17 @@ function workshops_edit_college_form($form_state, $id) {
 		'#attributes' => array('readonly' => 'readonly', 'class' => 'college_academic_code'),
 		'#value' => $item->academic_code,
 	);
-
+	
+	$form['school_college'] = array(
+		'#type' => 'radios',
+		'#title' => t('College / school'),
+		'#options' => array(1 => 'College', 0 => 'School'),
+		'#required' => TRUE,
+		'#default_value' => $item->school_college,
+		'#prefix' => '<div class="skype-request">',
+		'#suffix' => '</div>'
+	);
+	
 	$form['college_name'] = array(
 		'#type' => 'textfield',
 		'#title' => t('College Name'),
@@ -314,9 +411,52 @@ function workshops_edit_college_form($form_state, $id) {
 		'#value' => $item->pincode,
 	);
 
+	$form['resource_center'] = array(
+		'#type' => 'radios',
+		'#title' => t('Resource center'),
+		'#options' => array(1 => 'Yes', 0 => 'No'),
+		'#required' => TRUE,
+		'#default_value' => $item->resource_center,
+		'#attributes' => array('class' => 'resource_center'),
+		'#prefix' => '<div class="skype-request">',
+		'#suffix' => '</div>'
+	);
+	
+	$form['star_rating'] = array(
+		'#type' => 'select',
+		'#title' => t('Star Rating'),
+		'#required' => TRUE,
+		'#options' => array(0 => '0', 1 => '1', 2 => '2', 3 => '3', 4 => '4', 5 => '5'),
+		'#default_value' => $item->star_rating,
+		'#attributes' => array('class' => 'college_state'),
+		'#prefix' => '<div class="resource_center_details">'
+	);
+	
+	$form['contact_details'] = array(
+		'#type' => 'textarea',
+		'#title' => t('Contact details'),
+		'#size' => 30,
+		'#value' => $item->contact_details,
+		'#attributes' => array( 'rows' => '4', 'cols' => '30')
+	);
+	
+	$form['remarks'] = array(
+		'#type' => 'textarea',
+		'#title' => t('Activities'),
+		'#size' => 30,
+		'#value' => $item->remarks,
+		'#attributes' => array( 'rows' => '4', 'cols' => '30'),
+		'#suffix' => '</div>'
+	);
+
 	$form['id'] = array(
 		'#type' => 'hidden',
 		'#value' => $item->id,
+	);
+	
+	$form['referer'] = array(
+		'#type' => 'hidden',
+		'#value' => $_SERVER['HTTP_REFERER'],
 	);
 	
 	$form['submit'] = array(
@@ -327,13 +467,13 @@ function workshops_edit_college_form($form_state, $id) {
 	return $form;
 }
 function workshops_edit_college_form_submit($form, &$form_state){
-	$query = "update {academic_center} set state_code='".$_POST['state']."', institution_name='".db_escape_string($_POST['college_name']);
-	$query .= "', street='".db_escape_string($_POST['street'])."', city='".db_escape_string($_POST['city'])."',pincode='".$_POST['pincode']."' where id=".$_POST['id'];
-
+	$query = "update academic_center set state_code='".$_POST['state']."', institution_name='".db_escape_string($_POST['college_name']);
+	$query .= "', street='".db_escape_string($_POST['street'])."', city='".db_escape_string($_POST['city'])."', pincode='".$_POST['pincode']."', school_college=".db_escape_string($_POST['school_college']).", resource_center=".db_escape_string($_POST['resource_center']).", star_rating=".db_escape_string($_POST['star_rating']).", contact_details='".db_escape_string($_POST['contact_details'])."', remarks='".db_escape_string($_POST['remarks'])."'";
+	$query .= " where id=".$_POST['id'];
 	db_set_active('workshop_info');
 	if(db_query($query)){
 		drupal_set_message('College Details Added Successfully');
-		drupal_goto($path = 'workshops/college', $query = NULL, $fragment = NULL, $http_response_code = 302);
+		drupal_goto($_POST['referer'], $query = NULL, $fragment = NULL, $http_response_code = 302);
 	}else {
 		drupal_set_message('Error Adding College Details');
 	}
@@ -343,6 +483,16 @@ function workshops_edit_college_form_submit($form, &$form_state){
 	// exit;
 }
 
+function workshops_edit_form_validate($form, &$form_state) {
+	if($form_state['values']['resource_center'] == 1) {
+                if(trim($form_state['values']['contact_details']) == '') {
+                        form_set_error('resource_center', t('Please fill contact details'));
+                }
+                if(trim($form_state['values']['remarks']) == '') {
+                        form_set_error('remarks', t('Please fill Activities field'));
+                }
+        }
+}
 function workshops_view_college_details($id = NULL){
 	if($id){
 		$states_array = get_states(0);
@@ -355,13 +505,12 @@ function workshops_view_college_details($id = NULL){
  		if($result){
  			$item = db_fetch_object($result);
  			$output = '<table width="100%" cellpadding="6">';
- 			$output .= '<tr><td><b>State Code</b></td><td><b>'.$item->state_code.'</b></td></tr>';
- 			$output .= '<tr><td><b>Academic Center Code</b></td><td><b>'.$item->academic_code.'</b></td></tr>';
- 			$output .= '<tr><td><b>Institution Name</b></td><td><b>'.$item->institution_name.'</b></td></tr>';
- 			$output .= '<tr><td><b>Address</b></td><td><b>'.$item->street.'</b></td></tr>';
- 			$output .= '<tr><td><b>City</b></td><td><b>'.$item->city.'</b></td></tr>';
- 			$output .= '<tr><td><b>State</b></td><td><b>'.$states_array[$item->state_code].'</b></td></tr>';
- 			$output .= '<tr><td><b>Pin Code</b></td><td><b>'.$item->pincode.'</b></td></tr>';
+ 			$output .= '<tr><td><b>State Code</b></td><td>'.$item->state_code.'</td></tr>';
+ 			$output .= '<tr><td><b>Academic Center Code</b></td><td>'.$item->academic_code.'</td></tr>';
+ 			$temp = ($item->school_college)?"College":"School";
+ 			$output .= '<tr><td><b>College / School</b></td><td>'.$temp.'</td></tr>';
+ 			$output .= '<tr><td><b>Institution Name</b></td><td>'.$item->institution_name.'</td></tr>';
+ 			$output .= '<tr><td><b>Address</b></td><td><p>'.$item->street.'<br />'.$item->city.'<br />'.$states_array[$item->state_code].' - '.$item->pincode.'</td></tr>';
  			$output .= '<tr><td colspan="2"><hr /></td></tr>';
  			$output .= '</table>';
 
@@ -449,7 +598,7 @@ function edit_organiser_form_submit($form, &$form_state){
 	if(db_query($query)){
 		db_set_active('default');
 		drupal_set_message('organiser Details updated Successfully');
-		drupal_goto($path = 'workshops/college/list_organisers', $query = NULL, $fragment = NULL, $http_response_code = 302);
+		drupal_goto($path = 'workshops/members/list_organisers', $query = NULL, $fragment = NULL, $http_response_code = 302);
 	}else {
 		drupal_set_message('Error updating organiser Details');
 	}
@@ -471,12 +620,12 @@ function edit_organiser_form_submit($form, &$form_state){
 				$res = db_query($query);
 				$value = db_fetch_object($res);
 	 			$output = '<table width="100%" cellpadding="6">';
-	 			$output .= '<tr><td><b>Academic Center Code</b></td><td><b>'.$item->academic_code.'</b></td></tr>';
-	 			$output .= '<tr><td><b>Organiser Name</b></td><td><b>'.$item->organiser_name.'</b></td></tr>';
-	 			$output .= '<tr><td><b>Address</b></td><td><b>'.$item->address.'</b></td></tr>';
-	 			$output .= '<tr><td><b>City</b></td><td><b>'.$item->city.'</b></td></tr>';
-	 			$output .= '<tr><td><b>Phone</b></td><td><b>'.$item->phone.'</b></td></tr>';
-	 			$output .= '<tr><td><b>Email</b></td><td><b>'.$value->mail.'</b></td></tr>';
+	 			$output .= '<tr><td><b>Academic Center Code</b></td><td>'.$item->academic_code.'</td></tr>';
+	 			$output .= '<tr><td><b>Organiser Name</b></td><td>'.$item->organiser_name.'</td></tr>';
+	 			$output .= '<tr><td><b>Address</b></td><td><p>'.str_replace("\n", '<br />', $item->address).'</p></td></tr>';
+	 			$output .= '<tr><td><b>City</b></td><td>'.$item->city.'</td></tr>';
+	 			$output .= '<tr><td><b>Phone</b></td><td>'.$item->phone.'</td></tr>';
+	 			$output .= '<tr><td><b>Email</b></td><td>'.$value->mail.'</td></tr>';
 	 			
 	 			$output .= '<tr><td colspan="2"><hr /></td></tr>';
 	 			$output .= '</table>';
